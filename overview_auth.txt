@@ -1,0 +1,73 @@
+===============
+The Auth System认证系统
+===============
+
+--------------
+Developer Auth开发者认证
+--------------
+
+The auth system for Swift is based on the auth system from the existing
+Rackspace architecture -- actually from a few existing auth systems --
+and is therefore a bit disjointed. The distilled points about it are:
+
+Swift的认证系统是基于现存的Rackspace架构的认证系统--事实上只是从现存认证系统中吸收了一小部分。
+--并且因此有些脱节。集中起来有以下几点：
+
+* The authentication/authorization part is outside Swift itself
+  认证系统部分是独立于Swift之外的。
+* The user of Swift passes in an auth token with each request
+  用户每次请求都需要一个认证令牌来登入。
+* Swift validates each token with the external auth system and caches the
+  result
+  Swfit使用外部的认证系统来验证每一个令牌并且保存结果。
+* The token does not change from request to request, but does expire
+  不同的请求间，令牌并不会发生变化，但是会有到期日。
+
+The token can be passed into Swift using the X-Auth-Token or the
+X-Storage-Token header. Both have the same format: just a simple string
+representing the token. Some external systems use UUID tokens, some an MD5 hash
+of something unique, some use "something else" but the salient point is that
+the token is a string which can be sent as-is back to the auth system for
+validation.
+
+令牌通过使用X-Auth-Token或者X-Storage-Token的头信息来登入Swift。两者都有同样的格式：
+都是一个代表令牌的简单的字符串。一些外部的系统使用UUID令牌，一些使用MD5哈希，有些则使用其它的方式，
+但是总之一个显著的地方是这些令牌都是可以被原样发送给认证系统以验证身份的字符串。
+
+An auth call is given the auth token and the Swift account hash. For a valid
+token, the auth system responds with a session TTL and overall expiration in
+seconds from now. Swift does not honor the session TTL but will cache the
+token up to the expiration time. Tokens can be purged through a call to the
+auth system.
+
+一个认证呼叫将被反馈回认证令牌和账号哈希。对一个通过验证的令牌，认证系统会回复session TTL和从现在起的失效时间。
+Swift不会兑现session TTL但是会将令牌保存起来知道超过实效时间。令牌可以被对认证系统的一个呼叫来清理掉。
+
+The user starts a session by sending a ReST request to that auth system
+to receive the auth token and a URL to the Swift system.
+
+用户通过发送一个ReST请求给认证系统来启动一个会话，并得到认证令牌和访问Swift系统的URL。
+
+--------------
+Extending Auth其它认证
+--------------
+
+Auth is written as wsgi middleware, so implementing your own auth is as easy
+as writing new wsgi middleware, and plugging it in to the proxy server.
+
+认证系统就类似一个WSGI的中间件，因此实现你自己的认证系统就如写一个新的WSGI中间件那样简单，
+然后将它插入到Proxy服务器中。
+
+The current middleware is implemented in the DevAuthMiddleware class in
+swift/common/auth.py, and should be a good starting place for implemeting
+your own auth.
+
+目前此中间件是在swift/common/auth.py中的DevAuthMiddleware类实现的，这里也应该是你实现自己认证部分的极佳地点。
+
+------------------
+History and Future历史与未来
+------------------
+
+What's established in Swift for authentication/authorization has history from
+before Swift, so that won't be recorded here.
+为实现认证我们构建了哪些东西，这在Swift出现之前就存在了，因此再次我们不将其记述。

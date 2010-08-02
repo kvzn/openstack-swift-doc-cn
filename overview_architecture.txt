@@ -1,0 +1,185 @@
+============================
+Swift Architectural Overview
+============================
+
+.. TODO - add links to more detailed overview in each section below.
+
+------------
+Proxy Server
+------------
+
+The Proxy Server is responsible for tying together the rest of the Swift
+architecture. For each request, it will look up the location of the account,
+container, or object in the ring (see below) and route the request accordingly.
+The public API is also exposed through the Proxy Server.
+
+Proxy Server负责将Swift架构的其他部分绑定在一起。对每一个请求，Proxy Server都要在环中查找account,container,或者object的位置，并且将请求转送到对应的地方。公开的API也是通过Proxy Server暴露出来。
+
+A large number of failures are also handled in the Proxy Server. For
+example, if a server is unavailable for an object PUT, it will ask the
+ring for a handoff server and route there instead.
+
+大量的失败也是由Proxy Server处理的。比如，如果一个server无法对一个object的PUT操作进行相应，它将从环中查询一个可以接手的server并将请求转递给它。
+
+When objects are streamed to or from an object server, they are streamed
+directly through the proxy server to of from the user -- the proxy server
+does not spool them.
+
+当objects被传送object server或者从object server下载，他们将被直接通过proxy server传送----proxy server不回对他们进行“假脱机”。
+
+--------
+The Ring
+--------
+
+A ring represents a mapping between the names of entities stored on disk and
+their physical location. There are separate rings for accounts, containers, and
+objects. When other components need to perform any operation on an object,
+container, or account, they need to interact with the appropriate ring to
+determine its location in the cluster.
+
+环代表disk上所存储的实体的名称与他们物理位置之间的映射，它们是分别对应于accounts,containers和objects的环。当其它的组件需要对object,container或者account执行某个操作时，它们需要通过与对应的环的沟通来确定执行对象在集群中的位置。
+
+The Ring maintains this mapping using zones, devices, partitions, and replicas.
+Each partition in the ring is replicated, by default, 3 times accross the
+cluster, and the locations for a partition are stored in the mapping maintained
+by the ring. The ring is also responsible for determining which devices are
+used for handoff in failure scenarios.
+
+环通过zones（区域）,devices（存储）,partitions（分区）和replicas（副本）来维护这些映射。环中的每个分区都会被在集群中（还是集群间？）备份（默认3份），并且每个分区的位置信息将存储在环所维护的映射中。环同时也负责确定由哪个device（存储）来接手那些失败的操作情形。
+
+Data can be isolated with the concept of zones in the ring. Each replica
+of a partition is guaranteed to reside in a different zone. A zone could
+represent a drive, a server, a cabinet, a switch, or even a datacenter.
+
+数据可以通过环中的区域来隔离。每个分区的备份都将被保证存储于不同的区域.一个zone可以代表一个drive,一个server,一个机柜，一个交换机，甚至一个数据中心。
+
+The partitions of the ring are equally divided among all the devices in the
+Swift installation. When partitions need to be moved around (for example if a
+device is added to the cluster), the ring ensures that a minimum number of
+partitions are moved at a time, and only one replica of a partition is moved at
+a time.
+
+环的分区是对swift装置中所有存储的平均划分来确定的。当一个分区需要被移动（比如，一个新的存储加入此集群），环将确保每次只有最小数量的分区会被移动，并且每次只有一个分区的备份会被移动。
+
+Weights can be used to balance the distribution of partitions on drives
+across the cluster. This can be useful, for example, when different sized
+drives are used in a cluster.
+
+权重可以用来均衡存储上分区在集群间的分布。这是非常有用的，比如，当不同大小的drives被使用的集群中。
+
+The ring is used by the Proxy server and several background processes
+(like replication).
+
+环被Proxy和一些后台进程所使用（例如复制进程）
+
+-------------
+Object Server
+-------------
+
+The Object Server is a very simple blob storage server that can store,
+retrieve and delete objects stored on local devices. Objects are stored
+as binary files on the filesystem with metadata stored in the file's
+extended attributes (xattrs). This requires that the underlying filesystem
+choice for object servers support xattrs on files. Some filesystems,
+like ext3, have xattrs turned off by default.
+
+Object Server是一个非常简单的块存储服务器，它可以用来存储，获取和删除存储在本地存储上的objects。Obejcts以二进制文件的形式，连带着存储在扩展属性（xattrs）中的元数据，存储在文件系统上（xattrs）。这需要存储object的基础文件系统支持文件的xattrs。像ext3的一些文件系统，默然是关闭xattrs的。
+
+Each object is stored using a path derived from the object name's hash and
+the operation's timestamp. Last write always wins, and ensures that the
+latest object version will be served. A deletion is also treated as a
+version of the file (a 0 byte file ending with ".ts", which stands for
+tombstone). This ensures that deleted files are replicated correctly and
+older versions don't magically reappear due to failure scenarios.
+
+每个object是通过从“object名的哈希和操作发生的时间戳”生成的path来存储的。最后一次的写入总是赢家，并且确保最新版本的object被服务。一个删除操作也被视为目标文件的一个版本（一个0字节大小并且名称以.ts结尾的文件，其代表此文件的墓碑）。这将确保已删除的文件被正确地复制，并且旧的版本不会因为失败的操作而诡异地重新出现。
+
+----------------
+Container Server
+----------------
+
+The Container Server's primary job is to handle listings of objects. It
+doesn't know where those object's are, just what objects are in a specific
+container. The listings are stored as sqlite database files, and replicated
+across the cluster similar to how objects are. Statistics are also tracked
+that include the total number of objects, and total storage usage for that
+container.
+
+Container Server的主要职责是提供objects的清单。它不知道这些objects被存储在何处，只知道哪些objcts是归属于某一指定的容器中。objects清单以sqlite数据库文件的形式存储，并且像objects那样在集群中被备份。包含obejcts总数量和容器已用容量的信息也被追踪统计。
+
+--------------
+Account Server
+--------------
+
+The Account Server is very similar to the Container Server, excepting that
+it is responsible for listings of containers rather than objects.
+
+Account Server与Container Server非常类似，唯一不同的在于，account server是用来列举containers清单的，而非objects清单。
+
+-----------
+Replication
+-----------
+
+Replication is designed to keep the system in a consistent state in the face
+of temporary error conditions like network outages or drive failures.
+
+复制器被设计用来在面临临时错误（比如断网或存储器错误）时，保护系统的一致性。
+
+The replication processes compare local data with each remote copy to ensure
+they all contain the latest version. Object replication uses a hash list to
+quickly compare subsections of each partition, and container and account
+replication use a combination of hashes and shared high water marks.
+
+复制器进程比较本地数据与每一个远程备份，来确保他们都是最新版本的数据。Object复制器使用一个哈希列表来迅速地比较每一个分区子部分，同时container和account复制器使用哈希的排列并且共享高水平的唛头。
+
+Replication updates are push based. For object replication, updating is
+just a matter of rsyncing files to the peer. Account and container
+replication push missing records over HTTP or rsync whole database files.
+
+复制操作的更新基本以push的方式。比如object的复制操作，更新就是一个往其他节点同步文件的过程。Account和container的复制操作通过HTTP推送丢失的记录或着同步全部的数据库文件。
+
+The replicator also ensures that data is removed from the system. When an
+item (object, container, or account) is deleted, a tombstone is set as the
+latest version of the item. The replicator will see the tombstone and ensure
+that the item is removed from the entire system.
+
+复制器同时也确保数据从系统的删除。当一个目标(object, container, account)被删除，一个墓碑将作为此目标的最新版本被设置。复制器将见到此墓碑，并且确保此目标被从所有的系统中删除。
+
+--------
+Updaters
+--------
+
+There are times when container or account data can not be immediately
+updated. This usually occurs during failure scenarios or periods of high
+load. If an update fails, the update is queued locally on the filesystem,
+and the updater will process the failed updates. This is where an eventual
+consistency window will most likely come in to play. For example, suppose a
+container server is under load and a new object is put in to the system. The
+object will be immediately available for reads as soon as the proxy server
+responds to the client with success. However, the container server did not
+update the object listing, and so the update would be queued for a later
+update. Container listings, therefore, may not immediately contain the object.
+
+当contaniner或account数据不能被立即更新的情况会多次出现。这通常当错误的情形或者系统过载的状况出现时发生。当一个更新失败时，更新就在本地文件系统上排队，然后更新器会处理这些失败的更新。这时最终一致性的窗口会适时地出现。比如，假设一个container server处于低负载并且一个新的object被put到系统中时。一旦proxy server向客户端回复成功消息，此object就将立即可读。然而，container server不会更新object的清单，因此更新将被排队以等待稍候的更新。此刻container列举的清单，可能不回立马包含此object。
+
+In practice, the consistency window is only as large as the frequency at
+which the updater runs and may not even be noticed as the proxy server will
+route listing requests to the first container server which responds. The
+server under load may not be the one that serves subsequent listing
+requests -- one of the other two replicas may handle the listing.
+
+在实践中，一致性窗口的大小仅仅与更新器运行的频率一致，并且甚至不会......那个低负载的服务器可能不会接手接下来的listing请求---其他的两个备份中的一个会处理此listing请求。
+
+--------
+Auditors
+--------
+
+Auditors crawl the local server checking the integrity of the objects,
+containers, and accounts. If corruption is found (in the case of bit rot,
+for example), the file is quarantined, and replication will replace the bad
+file from another replica. If other errors are found they are logged (for
+example, an object's listing can't be found on any container server it
+should be).
+
+审计师爬行本地服务器来检查objects,containers和accounts的完整性。当一个文件被发现有损坏（比如一点损坏），它将被隔离，并且复制器将同其他的备份复制来代替此损坏的文件。如果别的错误发生，错误将被记录日志（比如列举一个object时在所有的它应该位于的container server都无法找到）
+
