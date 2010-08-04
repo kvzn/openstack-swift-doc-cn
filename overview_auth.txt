@@ -1,27 +1,27 @@
 ===============
-The Auth SystemÈÏÖ¤ÏµÍ³
+The Auth Systemè®¤è¯ç³»ç»Ÿ
 ===============
 
 --------------
-Developer Auth¿ª·¢ÕßÈÏÖ¤
+Developer Authå¼€å‘è€…è®¤è¯
 --------------
 
 The auth system for Swift is based on the auth system from the existing
 Rackspace architecture -- actually from a few existing auth systems --
 and is therefore a bit disjointed. The distilled points about it are:
 
-SwiftµÄÈÏÖ¤ÏµÍ³ÊÇ»ùÓÚÏÖ´æµÄRackspace¼Ü¹¹µÄÈÏÖ¤ÏµÍ³--ÊÂÊµÉÏÖ»ÊÇ´ÓÏÖ´æÈÏÖ¤ÏµÍ³ÖĞÎüÊÕÁËÒ»Ğ¡²¿·Ö¡£
---²¢ÇÒÒò´ËÓĞĞ©ÍÑ½Ú¡£¼¯ÖĞÆğÀ´ÓĞÒÔÏÂ¼¸µã£º
+Swiftçš„è®¤è¯ç³»ç»Ÿæ˜¯åŸºäºç°å­˜çš„Rackspaceæ¶æ„çš„è®¤è¯ç³»ç»Ÿ--äº‹å®ä¸Šåªæ˜¯ä»ç°å­˜è®¤è¯ç³»ç»Ÿä¸­å¸æ”¶äº†ä¸€å°éƒ¨åˆ†ã€‚
+--å¹¶ä¸”å› æ­¤æœ‰äº›è„±èŠ‚ã€‚é›†ä¸­èµ·æ¥æœ‰ä»¥ä¸‹å‡ ç‚¹ï¼š
 
 * The authentication/authorization part is outside Swift itself
-  ÈÏÖ¤ÏµÍ³²¿·ÖÊÇ¶ÀÁ¢ÓÚSwiftÖ®ÍâµÄ¡£
+  è®¤è¯ç³»ç»Ÿéƒ¨åˆ†æ˜¯ç‹¬ç«‹äºSwiftä¹‹å¤–çš„ã€‚
 * The user of Swift passes in an auth token with each request
-  ÓÃ»§Ã¿´ÎÇëÇó¶¼ĞèÒªÒ»¸öÈÏÖ¤ÁîÅÆÀ´µÇÈë¡£
+  ç”¨æˆ·æ¯æ¬¡è¯·æ±‚éƒ½éœ€è¦ä¸€ä¸ªè®¤è¯ä»¤ç‰Œæ¥ç™»å…¥ã€‚
 * Swift validates each token with the external auth system and caches the
   result
-  SwfitÊ¹ÓÃÍâ²¿µÄÈÏÖ¤ÏµÍ³À´ÑéÖ¤Ã¿Ò»¸öÁîÅÆ²¢ÇÒ±£´æ½á¹û¡£
+  Swfitä½¿ç”¨å¤–éƒ¨çš„è®¤è¯ç³»ç»Ÿæ¥éªŒè¯æ¯ä¸€ä¸ªä»¤ç‰Œå¹¶ä¸”ä¿å­˜ç»“æœã€‚
 * The token does not change from request to request, but does expire
-  ²»Í¬µÄÇëÇó¼ä£¬ÁîÅÆ²¢²»»á·¢Éú±ä»¯£¬µ«ÊÇ»áÓĞµ½ÆÚÈÕ¡£
+  ä¸åŒçš„è¯·æ±‚é—´ï¼Œä»¤ç‰Œå¹¶ä¸ä¼šå‘ç”Ÿå˜åŒ–ï¼Œä½†æ˜¯ä¼šæœ‰åˆ°æœŸæ—¥ã€‚
 
 The token can be passed into Swift using the X-Auth-Token or the
 X-Storage-Token header. Both have the same format: just a simple string
@@ -30,9 +30,9 @@ of something unique, some use "something else" but the salient point is that
 the token is a string which can be sent as-is back to the auth system for
 validation.
 
-ÁîÅÆÍ¨¹ıÊ¹ÓÃX-Auth-Token»òÕßX-Storage-TokenµÄÍ·ĞÅÏ¢À´µÇÈëSwift¡£Á½Õß¶¼ÓĞÍ¬ÑùµÄ¸ñÊ½£º
-¶¼ÊÇÒ»¸ö´ú±íÁîÅÆµÄ¼òµ¥µÄ×Ö·û´®¡£Ò»Ğ©Íâ²¿µÄÏµÍ³Ê¹ÓÃUUIDÁîÅÆ£¬Ò»Ğ©Ê¹ÓÃMD5¹şÏ££¬ÓĞĞ©ÔòÊ¹ÓÃÆäËüµÄ·½Ê½£¬
-µ«ÊÇ×ÜÖ®Ò»¸öÏÔÖøµÄµØ·½ÊÇÕâĞ©ÁîÅÆ¶¼ÊÇ¿ÉÒÔ±»Ô­Ñù·¢ËÍ¸øÈÏÖ¤ÏµÍ³ÒÔÑéÖ¤Éí·İµÄ×Ö·û´®¡£
+ä»¤ç‰Œé€šè¿‡ä½¿ç”¨X-Auth-Tokenæˆ–è€…X-Storage-Tokençš„å¤´ä¿¡æ¯æ¥ç™»å…¥Swiftã€‚ä¸¤è€…éƒ½æœ‰åŒæ ·çš„æ ¼å¼ï¼š
+éƒ½æ˜¯ä¸€ä¸ªä»£è¡¨ä»¤ç‰Œçš„ç®€å•çš„å­—ç¬¦ä¸²ã€‚ä¸€äº›å¤–éƒ¨çš„ç³»ç»Ÿä½¿ç”¨UUIDä»¤ç‰Œï¼Œä¸€äº›ä½¿ç”¨MD5å“ˆå¸Œï¼Œæœ‰äº›åˆ™ä½¿ç”¨å…¶å®ƒçš„æ–¹å¼ï¼Œ
+ä½†æ˜¯æ€»ä¹‹ä¸€ä¸ªæ˜¾è‘—çš„åœ°æ–¹æ˜¯è¿™äº›ä»¤ç‰Œéƒ½æ˜¯å¯ä»¥è¢«åŸæ ·å‘é€ç»™è®¤è¯ç³»ç»Ÿä»¥éªŒè¯èº«ä»½çš„å­—ç¬¦ä¸²ã€‚
 
 An auth call is given the auth token and the Swift account hash. For a valid
 token, the auth system responds with a session TTL and overall expiration in
@@ -40,34 +40,34 @@ seconds from now. Swift does not honor the session TTL but will cache the
 token up to the expiration time. Tokens can be purged through a call to the
 auth system.
 
-Ò»¸öÈÏÖ¤ºô½Ğ½«±»·´À¡»ØÈÏÖ¤ÁîÅÆºÍÕËºÅ¹şÏ£¡£¶ÔÒ»¸öÍ¨¹ıÑéÖ¤µÄÁîÅÆ£¬ÈÏÖ¤ÏµÍ³»á»Ø¸´session TTLºÍ´ÓÏÖÔÚÆğµÄÊ§Ğ§Ê±¼ä¡£
-Swift²»»á¶ÒÏÖsession TTLµ«ÊÇ»á½«ÁîÅÆ±£´æÆğÀ´ÖªµÀ³¬¹ıÊµĞ§Ê±¼ä¡£ÁîÅÆ¿ÉÒÔ±»¶ÔÈÏÖ¤ÏµÍ³µÄÒ»¸öºô½ĞÀ´ÇåÀíµô¡£
+ä¸€ä¸ªè®¤è¯å‘¼å«å°†è¢«åé¦ˆå›è®¤è¯ä»¤ç‰Œå’Œè´¦å·å“ˆå¸Œã€‚å¯¹ä¸€ä¸ªé€šè¿‡éªŒè¯çš„ä»¤ç‰Œï¼Œè®¤è¯ç³»ç»Ÿä¼šå›å¤session TTLå’Œä»ç°åœ¨èµ·çš„å¤±æ•ˆæ—¶é—´ã€‚
+Swiftä¸ä¼šå…‘ç°session TTLä½†æ˜¯ä¼šå°†ä»¤ç‰Œä¿å­˜èµ·æ¥çŸ¥é“è¶…è¿‡å®æ•ˆæ—¶é—´ã€‚ä»¤ç‰Œå¯ä»¥è¢«å¯¹è®¤è¯ç³»ç»Ÿçš„ä¸€ä¸ªå‘¼å«æ¥æ¸…ç†æ‰ã€‚
 
 The user starts a session by sending a ReST request to that auth system
 to receive the auth token and a URL to the Swift system.
 
-ÓÃ»§Í¨¹ı·¢ËÍÒ»¸öReSTÇëÇó¸øÈÏÖ¤ÏµÍ³À´Æô¶¯Ò»¸ö»á»°£¬²¢µÃµ½ÈÏÖ¤ÁîÅÆºÍ·ÃÎÊSwiftÏµÍ³µÄURL¡£
+ç”¨æˆ·é€šè¿‡å‘é€ä¸€ä¸ªReSTè¯·æ±‚ç»™è®¤è¯ç³»ç»Ÿæ¥å¯åŠ¨ä¸€ä¸ªä¼šè¯ï¼Œå¹¶å¾—åˆ°è®¤è¯ä»¤ç‰Œå’Œè®¿é—®Swiftç³»ç»Ÿçš„URLã€‚
 
 --------------
-Extending AuthÆäËüÈÏÖ¤
+Extending Authå…¶å®ƒè®¤è¯
 --------------
 
 Auth is written as wsgi middleware, so implementing your own auth is as easy
 as writing new wsgi middleware, and plugging it in to the proxy server.
 
-ÈÏÖ¤ÏµÍ³¾ÍÀàËÆÒ»¸öWSGIµÄÖĞ¼ä¼ş£¬Òò´ËÊµÏÖÄã×Ô¼ºµÄÈÏÖ¤ÏµÍ³¾ÍÈçĞ´Ò»¸öĞÂµÄWSGIÖĞ¼ä¼şÄÇÑù¼òµ¥£¬
-È»ºó½«Ëü²åÈëµ½Proxy·şÎñÆ÷ÖĞ¡£
+è®¤è¯ç³»ç»Ÿå°±ç±»ä¼¼ä¸€ä¸ªWSGIçš„ä¸­é—´ä»¶ï¼Œå› æ­¤å®ç°ä½ è‡ªå·±çš„è®¤è¯ç³»ç»Ÿå°±å¦‚å†™ä¸€ä¸ªæ–°çš„WSGIä¸­é—´ä»¶é‚£æ ·ç®€å•ï¼Œ
+ç„¶åå°†å®ƒæ’å…¥åˆ°ProxyæœåŠ¡å™¨ä¸­ã€‚
 
 The current middleware is implemented in the DevAuthMiddleware class in
 swift/common/auth.py, and should be a good starting place for implemeting
 your own auth.
 
-Ä¿Ç°´ËÖĞ¼ä¼şÊÇÔÚswift/common/auth.pyÖĞµÄDevAuthMiddlewareÀàÊµÏÖµÄ£¬ÕâÀïÒ²Ó¦¸ÃÊÇÄãÊµÏÖ×Ô¼ºÈÏÖ¤²¿·ÖµÄ¼«¼ÑµØµã¡£
+ç›®å‰æ­¤ä¸­é—´ä»¶æ˜¯åœ¨swift/common/auth.pyä¸­çš„DevAuthMiddlewareç±»å®ç°çš„ï¼Œè¿™é‡Œä¹Ÿåº”è¯¥æ˜¯ä½ å®ç°è‡ªå·±è®¤è¯éƒ¨åˆ†çš„æä½³åœ°ç‚¹ã€‚
 
 ------------------
-History and FutureÀúÊ·ÓëÎ´À´
+History and Futureå†å²ä¸æœªæ¥
 ------------------
 
 What's established in Swift for authentication/authorization has history from
 before Swift, so that won't be recorded here.
-ÎªÊµÏÖÈÏÖ¤ÎÒÃÇ¹¹½¨ÁËÄÄĞ©¶«Î÷£¬ÕâÔÚSwift³öÏÖÖ®Ç°¾Í´æÔÚÁË£¬Òò´ËÔÙ´ÎÎÒÃÇ²»½«Æä¼ÇÊö¡£
+ä¸ºå®ç°è®¤è¯æˆ‘ä»¬æ„å»ºäº†å“ªäº›ä¸œè¥¿ï¼Œè¿™åœ¨Swiftå‡ºç°ä¹‹å‰å°±å­˜åœ¨äº†ï¼Œå› æ­¤å†æ¬¡æˆ‘ä»¬ä¸å°†å…¶è®°è¿°ã€‚
