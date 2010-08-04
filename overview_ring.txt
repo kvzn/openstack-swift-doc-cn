@@ -8,8 +8,8 @@ objects but each ring works in the same way. These rings are externally
 managed, in that the server processes themselves do not modify the rings, they
 are instead given new rings modified by other tools.
 
-环决定将数据在集群中存于何处。帐号数据库，容器数据库和individual的对象数据库都分别拥有一个环，这些环都以同样的方式工作。
-这些环是被从外部管理的，因为环服务器他们自己不回修改环本身，环是被其他的工具通过创建新环还实现修改的目的的。
+环决定将数据在集群中存于何处。帐号数据库，容器数据库和每个objects都分别拥有一个环，这些环都以同样的方式工作。
+这些环是被从外部管理的，因为环服务器他们自己不会修改环本身，环是被其他的工具通过创建新环来实现修改的目的的。
 
 The ring uses a configurable number of bits from a path's MD5 hash as a
 partition index that designates a device. The number of bits kept from the hash
@@ -19,8 +19,9 @@ cluster to work in batches of items at once which ends up either more efficient
 or at least less complex than working with each item separately or the entire
 cluster all at once.
 
-环使用一个从路径的MD5哈希得到的数量可配置的字节来作为分区索引来代表一个存储设备。字节数量防止哈希被认为是分区的能力，
-另外对分区能力而言字节数量被认为代表分区数量。............
+环使用一些从路径的MD5哈希得到的数量可配置的字节来作为分区索引来代表一个存储设备。所维护的那些由哈希而来的字节，
+被视为分区的能力，而对分区能力来说，这些字节则表示分区数量。对完整的MD5哈希环进行分区可以使集群的其它部分在立即处理多项内容时，
+比每项内容单独处理，和全面调动整个集群，都更能得到极好的有效性和极小的复杂性。
 
 Another configurable value is the replica count, which indicates how many of
 the partition->device assignments comprise a single ring. For a given partition
@@ -29,8 +30,9 @@ replica's device. Zones can be used to group devices based on physical
 locations, power separations, network separations, or any other attribute that
 would lessen multiple replicas being unavailable at the same time.
 
-另外一个可配置参数是备份数量，它代表由多少分区到存储的任务构成一个环。对一个给定的分区数目，每一个备份的设备将不会于其他备份的存储处于同一区域。
-区域可以用来对所有存储依据存储的物理地址，能力分割,网络分割，或者其他任何可以减少同一时间无效备份的属性，来分组。
+另外一个可配置参数是备份的数量，它代表由多少分区到存储的任务构成一个单独的环。对一个给定的分区数目，
+每一个备份的设备将不会于其他备份的存储处于同一区域。区域可以用来对所有存储依据存储的物理地址，能力分割,网络分割，
+或者其他任何可以减少同一时间无效备份的属性，来分组。
 
 ------------
 Ring Builder
@@ -45,9 +47,9 @@ how the ring-builder manages changes to the ring, using a slightly older ring
 usually just means one of the three replicas for a subset of the partitions
 will be incorrect, which can be easily worked around.
 
-所有的环都由环构造器来创建和管理。环构造器将分区赋予存储并且将一个有效的Python结构体写入一个压缩的文件存在磁盘上，以将此文件传送给处理服务器。
-处理服务器偶尔检查此结构文件修改的事件并且在需要的时候将此结构体重新载入内存。正因为环构造器管理环的变更的方式，
-使用一个稍微老点的环通常意味着分区对应的备份的三个中有一个是不正确的，但这也可很容易地变通解决。
+所有的环都由环构造器来创建和管理。环构造器将分区赋予存储设备并将一个优化的Python结构体写入一个压缩的文件存在磁盘上，
+以将此文件传送给处理服务器。处理服务器偶尔检查此结构文件修改的时间并且在需要的时候将此结构体重新载入内存。
+正因为环构造器管理环的变更的方式，使用一个稍微过时的环通常意味着分区对应的备份的三个中有一个是不正确的，但这也可很容易地变通解决。
 
 The ring-builder also keeps its own builder file with the ring information and
 additional data required to build future rings. It is very important to keep
@@ -61,9 +63,9 @@ builder file loss is possible, but data will definitely be unreachable for an
 extended time.
 
 环构造器同时也维护它自己的包含环的信息以及其他在创建新的环时所需要的附加信息的构造文件。保有这些构造文件的几个副本是相当重要的。
-一个选择是在此环构造器往目标服务器拷贝环数据文件时，也将构造文件复制到目标服务器上。另一个选择是将构造文件自行在集群中备份。
-构造文件的彻底丢失意味着必须根据推测来常见一个新的环，几乎所有的分区都将不再被赋予不同的存储，并且因此几乎所有的存储的数据都必须被复制到新的地点。
-因此，恢复一个丢失的环构造文件时很有必要的，但是当时间越久时，数据便铁定不能再得到。
+一个选择是在此环构造器往目标服务器拷贝环数据文件时，也将构造文件复制到每个服务器上。另一个选择是将构造文件自行在集群中备份。
+构造文件的彻底丢失意味着必须根据推测来拼凑一个新的环，几乎所有的分区都将不再被赋予不同的存储设备，
+并且因此几乎所有的存储的数据都必须被复制到新的地点。因此，恢复一个丢失的环构造文件也是可以做到的，但是当时间越久时，数据便铁定不能再得到。
 
 -------------------
 Ring Data Structure
@@ -74,7 +76,7 @@ in the cluster, a list of lists of device ids indicating partition to device
 assignments, and an integer indicating the number of bits to shift an MD5 hash
 to calculate the partition for the hash.
 
-环数据结构体有三个顶级域构成：集群中存储的列表，分区所对应存储的列表的列表，以及一个代表将MD5哈希换算出目标分区的字节串的字节数量的整数。
+环数据结构体有三个顶级域构成：集群中存储的列表，分区所对应存储设备的列表的列表，以及一个代表将MD5哈希换算出目标分区的字节串的字节数量的整数。
 
 ***************
 List of Devices存储列表
@@ -83,7 +85,7 @@ List of Devices存储列表
 The list of devices is known internally to the Ring class as devs. Each item in
 the list of devices is a dictionary with the following keys:
 
-存储列表被环类内部当做dev来识别。存储列表中的每一个条目都是一个包含以下键值的字典：
+存储设备列表被环类内部用dev来识别。存储设备列表中的每一个条目都是一个包含以下键值的字典：
 
 ======  =======  ==============================================================
 id      integer  The index into the list devices.存储索引。
@@ -122,8 +124,8 @@ to 0.0. To obtain a list of active devices (for uptime polling, for example)
 the Python code would look like: ``devices = [device for device in self.devs if
 device and device['weight']]``
 
-注意：存储设备的列表可能包含一些漏洞，或者对应不到任何存储设备的索引，比如一个已经从集群中移去的存储。
-同时，当一些设备的权重被临时甚至为0.0时，它们也是不可用的。如果想得到活动存储的列表（运行时投票），
+注意：存储设备的列表可能包含一些漏洞，或者对应不到任何存储设备的索引，比如一个已经从集群中移去的存储设备。
+一般，存储设备的id都不能重复使用。同时，当一些设备的权重被临时设置为0.0时，它们也是不可用的。如果想得到活动存储的列表（运行时投票），
 Python代码可以写成这样："`devices = [device for device in self.devs if
 device and device['weight']]"
 
