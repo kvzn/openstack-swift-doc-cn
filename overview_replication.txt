@@ -1,1 +1,118 @@
-===========Replication¸´ÖÆ²Ù×÷===========Since each replica in swift functions independently, and clients generally require only a simple majority of nodes responding to consider an operation successful, transient failures like network partitions can quickly cause replicas to diverge.  These differences are eventually reconciled by asynchronous, peer-to-peer replicator processes.  The replicator processes traverse their local filesystems, concurrently performing operations in a manner that balances load across physical disks.ÒòÎªSwiftÖĞµÄÃ¿Ò»¸ö¸±±¾¶¼ÊÇ¶ÀÁ¢µØ»î¶¯£¬²¢ÇÒ¿Í»§Í¨³£Ö»ĞèÒªÒ»¸ö¼òµ¥¶àÊıµÄ½ÚµãÏìÓ¦¾Í¿ÉÒÔÈ·¶¨Ò»¸ö²Ù×÷µÄ³É¹¦£¬Òò´ËÈçÍøÂç¶Ï¿ªÄÇĞ©¶ÌÔİµÄ¹ÊÕÏ»áÑ¸ËÙµØÊ¹¸±±¾±»¸ôÀë¡£ÕâĞ©²»Ò»ÖÂ×îÖÕ»á±»Òì²½µÄ£¬µã¶ÔµãµÄ¸´ÖÆ²Ù×÷ËùÀíË³¡£¸´ÖÆÆ÷½ø³Ì±éÀúËûÃÇµÄÎÄ¼şÏµÍ³£¬²¢ÇÒÍ¬Ê±ÒÔ¿ÉÒÔÔÚÎïÀí´ÅÅÌ¼ä¾ùºâ¸ºÔØµÄ·½Ê½À´Ö´ĞĞ²Ù×÷¡£Replication uses a push model, with records and files generally only being copied from local to remote replicas.  This is important because data on the node may not belong there (as in the case of handoffs and ring changes), and a replicator can't know what data exists elsewhere in the cluster that it should pull in.  It's the duty of any node that contains data to ensure that data gets to where it belongs.  Replica placement is handled by the ring.¸´ÖÆ²Ù×÷Ê¹ÓÃÍÆËÍµÄÄ£Ê½£¬¼ÇÂ¼ºÍÎÄ¼şÍ¨³£Ö»±»´Ó±¾µØ¸´ÖÆµ½Ô¶³Ì¸±±¾¡£ÕâºÜÖØÒªÒòÎªÄÇ¸ö½ÚµãÉÏµÄÊı¾İ¿ÉÄÜ²¢²»ÊäÓÚÄÇÀï£¨±ÈÈçµ±½ÓÊÖ»òÕß»··¢Éú±ä»¯£©£¬²¢ÇÒÒ»¸ö¸´ÖÆÆ÷ÎŞ·¨ÖªµÀ´Ó¼¯ÈºÖĞµÄÊ²Ã´µØ·½À´À­È¡Êı¾İ¡£Ã¿¸ö½Úµã¶¼ÓĞÒåÎñÈ·±£ËüËù¹ÜÏ½µÄÊı¾İ±»¸´ÖÆµ½Ó¦¸Ãµ½´ïµÄÄ¿µÄµØ¡£¸±±¾µÄµØÖ·±»»·Î¬»¤¡£Every deleted record or file in the system is marked by a tombstone, so that deletions can be replicated alongside creations.  These tombstones are cleaned up by the replication process after a period of time referred to as the consistency window, which is related to replication duration and how long transient failures can remove a node from the cluster.  Tombstone cleanup must be tied to replication to reach replica convergence.ÏµÍ³ÖĞÃ¿Ò»¸öÉ¾³ıµÄ¼ÇÂ¼»òÎÄ¼ş¶¼»á±»ÓÃÒ»¸ö¡°Ä¹±®¡±À´±ê×¢£¬ÕâÑùÉ¾³ı²Ù×÷¾Í¿ÉÒÔÏñ´´½¨²Ù×÷ÄÇÑù±»¸´ÖÆ¡£ÕâĞ©Ä¹±®»áÔÚÓÉÒ»ÖÂĞÔ´°¿ÚµÃµ½µÄÊ±¼ä½ìÂúÖ®ºó±»ÇåÀíµô£¬Õâ¸öÒ»ÖÂĞÔ´°¿ÚÓë¸´ÖÆ²Ù×÷³ÖĞøÊ±¼äºÍÁÙÊ±¹ÊÕÏ×ãÒÔ½«Ò»¸ö½Úµã´Ó¼¯ÈºÖĞÈ¥³ıµÄÊ±¼äÓĞ¹Ø¡£Ä¹±®ÇåÀí±ØĞë±»¸´ÖÆ²Ù×÷ËùÇ£ÖÆ£¬ÒÔ´ïµ½¸´ÖÆÊÕÁ²¡£If a replicator detects that a remote drive is has failed, it will use the ring's "get_more_nodes" interface to choose an alternate node to synchronize with.  The replicator can generally maintain desired levels of replication in the face of hardware failures, though some replicas may not be in an immediately usable location.Èç¹ûÒ»¸ö¸´ÖÆÆ÷·¢ÏÖÒ»¸öÔ¶³Ì´æ´¢Éè±¸³öÏÖÎÊÌâ£¬Ëü½«Ê¹ÓÃ»·µÄ¡°get_more_nodes"½Ó¿ÚÀ´Ñ¡ÔñÒ»¸öÔ¤±¸µÄ½ÚµãÀ´½«Êı¾İÍ¬²½¸øËü¡£¸´ÖÆÆ÷ÔÚÃæÁÙÓ²¼ş¹ÊÕÏÊ±Í¨³£»áÎ¬³ÖÆÚÍûË®Æ½µÄ¸´ÖÆ²Ù×÷£¬Òò´ËÒ»Ğ©¸±±¾¿ÉÄÜ²»»áÂíÉÏ¾Í´¦ÓÚÒ»¸ö¿ÉÓÃµÄµØµã¡£Replication is an area of active development, and likely rife with potential improvements to speed and correctness.¸´ÖÆ²Ù×÷ÊÇÒ»¸ö»îÔ¾µÄ¿ª·¢°æ¿é£¬²¢ÇÒ¼«ÓĞÇ±Á¦ÒÔ¼ÓËÙ²¢ÓÅ»¯Ö®¡£There are two major classes of replicator - the db replicator, which replicates accounts and containers, and the object replicator, which replicates object data.¸´ÖÆÆ÷ÖĞÓĞÁ½¸öÖ÷ÒªµÄÀà---Êı¾İ¿â¸´ÖÆÆ÷£¬Ëü¸´ÖÆÕËºÅºÍÈİÆ÷£¬ÁíÒ»¸öÊÇ¶ÔÏó¸´ÖÆÆ÷£¬Ëü¸´ÖÆ¶ÔÏóÊı¾İ¡£--------------DB Replication--------------The first step performed by db replication is a low-cost hash comparison to find out whether or not two replicas already match.  Under normal operation, this check is able to verify that most databases in the system are already synchronized very quickly.  If the hashes differ, the replicator brings the databases in sync by sharing records added since the last sync point.Êı¾İ¿âÉ¾³ı²Ù×÷µÄµÚÒ»²½ÊÇµÍ³É±¾µÄ±È½ÏÒÔÕÒ³öÊÇ·ñÁ½¸ö¸±±¾ÒÑ¾­ÏàÆ¥Åä¡£ÔÚÒ»°ã²Ù×÷ÏÂ£¬Õâ¸ö¼ì²é¿ÉÒÔ²éÑéÏµÍ³ÖĞ×î¶àµÄÊı¾İ¿âÒÑ¾­Ñ¸ËÙµØÍ¬²½¡£Èç¹û¹şÏ£²»Í¬£¬¸´ÖÆÆ÷½«»á´Ó×îºóÒ»´ÎÍ¬²½µãÌí¼ÓµÄ¼ÇÂ¼À´Æô¶¯Êı¾İ¿âµÄÍ¬²½¡£This sync point is a high water mark noting the last record at which two databases were known to be in sync, and is stored in each database as a tuple of the remote database id and record id.  Database ids are unique amongst all replicas of the database, and record ids are monotonically increasing integers.  After all new records have been pushed to the remote database, the entire sync table of the local database is pushed,  so the remote database knows it's now in sync with everyone the local database has previously synchronized with.Õâ¸öÍ¬²½µãÊÇ¸ö¸ßË®Æ½µÄ±ê¼ÇÁ½¸öÊı¾İ¿â±»ÈÏÎªÒ»Í¬²½µÄ×î½üÒ»´Î¼ÇÂ¼£¬²¢ÇÒ±»ÔÚÃ¿¸öÊı¾İ¿âÖĞ°´ÕÕÒ»¸öÔ¶³ÌÊı¾İ¿âIDºÍ¼ÇÂ¼IDµÄÔª×éÀ´±£´æ¡£Êı¾İ¿âIDÔÚÊı¾İ¿âËùÓĞµÄ¸±±¾ÖĞÊ½Î¨Ò»µÄ£¬²¢ÇÒ¼ÇÂ¼IDÊÇµ¥µ÷µİÔöµÄÖ¤Êé¡£µ±ËùÓĞĞÂµÄ¼ÇÂ¼¶¼±»ÍÆËÍµ½Ô¶³ÌÊı¾İ¿âÖ®ºó£¬±¾µØÊı¾İ¿âµÄÈ«²¿µÄÍ¬²½±í½«»á±»ÍÆËÍ£¬Òò´ËÔ¶³ÌÊı¾İ¿âÖªµÀËüÏÖÔÚÓë±¾µØÊı¾İ¿âÖ®Ç°Í¬²½µÄËùÓĞÊı¾İ¿âÊÇÍ¬²½µÄ¡£ If a replica is found to be missing entirely, the whole local database file is transmitted to the peer using rsync(1) and vested with a new unique id.  Èç¹ûÒ»¸ö¸±±¾±»·¢ÏÖÈ«²¿¶ªÊ§£¬ËùÓĞµÄ±¾µØÊı¾İ¿âÎÄ¼ş»á±»Ê¹ÓÃÒ»¸öĞÂµÄÎ¨Ò»µÄIDÒì²½µØ´«ËÍ¸øÄÇ¸öµ¥Ôª.In practice, DB replication can process hundreds of databases per concurrency setting per second (up to the number of available CPUs or disks) and is bound by the number of DB transactions that must be performed.ÔÚÊµ¼ùÖĞ£¬Êı¾İ¿â¸´ÖÆ²Ù×÷»áÃ¿Ãë»á´¦Àí¼¸°Ù¸öÊı¾İ¿âµÄÒ»ÖÂĞÔÎÊÌâ£¨ÒÔÓĞĞ§CPUºÍ´ÅÅÌÊıÁ¿ÎªÏŞ£©£¬²¢ÇÒÊÜÏŞÓÚ±ØĞë´¦ÀíµÄÊı¾İ¿â´«ÊäµÄÊıÁ¿¡£------------------Object Replication¶ÔÏó¸´ÖÆ²Ù×÷------------------The initial implementation of object replication simply performed an rsync to push data from a local partition to all remote servers it was expected to exist on.  While this performed adequately at small scale, replication times skyrocketed once directory structures could no longer be held in RAM.  We now use a modification of this scheme in which a hash of the contents for each suffix directory is saved to a per-partition hashes file.  The hash for a suffix directory is invalidated when the contents of that suffix directory are modified. ¶ÔÏó¸´ÖÆ²Ù×÷×î³õÒªÊµÏÖµÄ¾ÍÊÇ¼òµ¥µØ½«Êı¾İ´Ó±¾µØ·ÖÇøÒì²½µØÍÆËÍµ½Ä¿±êÎ»ÖÃ¡£µ±ÕâÔÚÒ»¸ö½ÏµÍµÄ±ÈÀı³ä·ÖµØÖ´ĞĞÊ±£¬¸´ÖÆ²Ù×÷»á¶à´Î¼±ËÙ·¢ÉúÒ»µ¥Ä¿Â¼½á¹¹²»ÄÜ±»ÄÚ´æ´æÈ¡¡£ÎÒÃÇÏÖÔÚÊ¹ÓÃÒ»¸öĞŞ¸Ä¹ıµÄ·½°¸£¬´Ë·½°¸ÖĞÃ¿Ò»¸öºó×ºÄ¿Â¼ÄÚÈİµÄ¹şÏ£»á±»±£´æµ½Ò»¸öÃ¿·ÖÇø¹şÏ£ÎÄ¼ş¡£µ±´Ëºó×ºÄ¿Â¼µÄÄÚÈİ·¢ÉúĞŞ¸ÄÊ±£¬Æä¶ÔÓ¦µÄ¹şÏ£¾Í»áÊ§Ğ§¡£The object replication process reads in these hash files, calculating any invalidated hashes.  It then transmits the hashes to each remote server that should hold the partition, and only suffix directories with differing hashes  on the remote server are rsynced.  After pushing files to the remote server, the replication process notifies  it to recalculate hashes for the rsynced suffix directories. ¶ÔÏó¸´ÖÆ²Ù×÷»á¶ÁÈ¡ÕâĞ©¹şÏ£ÎÄ¼ş£¬¼ÆËãËùÓĞÎŞĞ§µÄ¹şÏ£¡£È»ºó´«ËÍÄÇĞ©¹şÏ£µ½¹ÜÏ½ÕâĞ©·ÖÇøµÄÔ¶³ÌµÄ·şÎñÆ÷£¬È»ºóÖ»ÓĞÓëÔ¶³Ì·şÎñÆ÷ÓĞ²»Í¬¹şÏ£µÄºó×ºÄ¿Â¼»á±»ÖØĞÂÍ¬²½¡£½«ÎÄ¼şÍÆËÍµ½Ô¶³Ì·şÎñÆ÷Ö®ºó£¬¸´ÖÆ½ø³Ì»áÍ¨±¨Õâ¸öÊÂ¼şÒÔÖØĞÂ¼ÆËãÄÇĞ©ÖØĞÂÍ¬²½µÄºó×ºÄ¿Â¼µÄ¹şÏ£¡£Performance of object replication is generally bound by the number of uncached directories it has to traverse, usually as a result of invalidated suffix directory hashes.  Using write volume and partition counts from our  running systems, it was designed so that around 2% of the hash space on a normal node will be invalidated per day,  which has experimentally given us acceptable replication speeds.¶ÔÏó¸´ÖÆµÄÖ´ĞĞÍ¨³£ÊÜÏŞÓÚ±ØĞëÒª±éÀúµÄÎ´±£´æÄ¿Â¼µÄÊıÁ¿£¬ÕâÒ»°ãÊÇÓÉÎŞĞ§µÄºó×ºÄ¿Â¼¹şÏ£Ëùµ¼ÖÂµÄ¡£Ê¹ÓÃ´ÓÔËĞĞÖĞµÄÏµÍ³Ğ´¾íºÍ·ÖÇø¼ÆÊı£¬ÕâÑùÉè¼ÆÊÇÎªÓ¦¶Ô¼ÙÉèÃ¿ÌìÒ»¸ö½ÚµãÉÏµÄ¹şÏ£¿Õ¼ä³öÏÖ2%×óÓÒµÄÊ§Ğ§µÄ×´¿ö£¬ÕâÊµÑéĞÔµØ¸øÎÒÃÇÁËÒ»¸ö¿É½ÓÊÜµÄ¸´ÖÆËÙ¶È¡£
+===========
+Replicationå¤åˆ¶æ“ä½œ
+===========
+
+Since each replica in swift functions independently, and clients generally require 
+only a simple majority of nodes responding to consider an operation successful, 
+transient failures like network partitions can quickly cause replicas to diverge.  
+These differences are eventually reconciled by asynchronous, peer-to-peer replicator processes.  
+The replicator processes traverse their local filesystems, concurrently performing operations 
+in a manner that balances load across physical disks.
+
+å› ä¸ºSwiftä¸­çš„æ¯ä¸€ä¸ªå‰¯æœ¬éƒ½æ˜¯ç‹¬ç«‹åœ°æ´»åŠ¨ï¼Œå¹¶ä¸”å®¢æˆ·é€šå¸¸åªéœ€è¦ä¸€ä¸ªç®€å•å¤šæ•°çš„èŠ‚ç‚¹å“åº”å°±å¯ä»¥ç¡®å®šä¸€ä¸ªæ“ä½œçš„æˆåŠŸï¼Œ
+å› æ­¤å¦‚ç½‘ç»œæ–­å¼€é‚£äº›çŸ­æš‚çš„æ•…éšœä¼šè¿…é€Ÿåœ°ä½¿å‰¯æœ¬è¢«éš”ç¦»ã€‚è¿™äº›ä¸ä¸€è‡´æœ€ç»ˆä¼šè¢«å¼‚æ­¥çš„ï¼Œç‚¹å¯¹ç‚¹çš„å¤åˆ¶æ“ä½œæ‰€ç†é¡ºã€‚
+å¤åˆ¶å™¨è¿›ç¨‹éå†ä»–ä»¬çš„æ–‡ä»¶ç³»ç»Ÿï¼Œå¹¶ä¸”åŒæ—¶ä»¥å¯ä»¥åœ¨ç‰©ç†ç£ç›˜é—´å‡è¡¡è´Ÿè½½çš„æ–¹å¼æ¥æ‰§è¡Œæ“ä½œã€‚
+
+
+Replication uses a push model, with records and files generally only being copied 
+from local to remote replicas.  This is important because data on the node may not 
+belong there (as in the case of handoffs and ring changes), and a replicator can't 
+know what data exists elsewhere in the cluster that it should pull in.  It's the duty 
+of any node that contains data to ensure that data gets to where it belongs.  
+Replica placement is handled by the ring.
+
+å¤åˆ¶æ“ä½œä½¿ç”¨æ¨é€çš„æ¨¡å¼ï¼Œè®°å½•å’Œæ–‡ä»¶é€šå¸¸åªè¢«ä»æœ¬åœ°å¤åˆ¶åˆ°è¿œç¨‹å‰¯æœ¬ã€‚è¿™å¾ˆé‡è¦å› ä¸ºé‚£ä¸ªèŠ‚ç‚¹ä¸Šçš„æ•°æ®å¯èƒ½å¹¶ä¸è¾“äº
+é‚£é‡Œï¼ˆæ¯”å¦‚å½“æ¥æ‰‹æˆ–è€…ç¯å‘ç”Ÿå˜åŒ–ï¼‰ï¼Œå¹¶ä¸”ä¸€ä¸ªå¤åˆ¶å™¨æ— æ³•çŸ¥é“ä»é›†ç¾¤ä¸­çš„ä»€ä¹ˆåœ°æ–¹æ¥æ‹‰å–æ•°æ®ã€‚æ¯ä¸ªèŠ‚ç‚¹éƒ½æœ‰ä¹‰åŠ¡
+ç¡®ä¿å®ƒæ‰€ç®¡è¾–çš„æ•°æ®è¢«å¤åˆ¶åˆ°åº”è¯¥åˆ°è¾¾çš„ç›®çš„åœ°ã€‚å‰¯æœ¬çš„åœ°å€è¢«ç¯ç»´æŠ¤ã€‚
+
+Every deleted record or file in the system is marked by a tombstone, so that deletions can be 
+replicated alongside creations.  These tombstones are cleaned up by the replication process after 
+a period of time referred to as the consistency window, which is related to replication duration 
+and how long transient failures can remove a node from the cluster.  
+Tombstone cleanup must be tied to replication to reach replica convergence.
+
+ç³»ç»Ÿä¸­æ¯ä¸€ä¸ªåˆ é™¤çš„è®°å½•æˆ–æ–‡ä»¶éƒ½ä¼šè¢«ç”¨ä¸€ä¸ªâ€œå¢“ç¢‘â€æ¥æ ‡æ³¨ï¼Œè¿™æ ·åˆ é™¤æ“ä½œå°±å¯ä»¥åƒåˆ›å»ºæ“ä½œé‚£æ ·è¢«å¤åˆ¶ã€‚è¿™äº›å¢“ç¢‘
+ä¼šåœ¨ç”±ä¸€è‡´æ€§çª—å£å¾—åˆ°çš„æ—¶é—´å±Šæ»¡ä¹‹åè¢«æ¸…ç†æ‰ï¼Œè¿™ä¸ªä¸€è‡´æ€§çª—å£ä¸å¤åˆ¶æ“ä½œæŒç»­æ—¶é—´å’Œä¸´æ—¶æ•…éšœè¶³ä»¥å°†ä¸€ä¸ªèŠ‚ç‚¹ä»
+é›†ç¾¤ä¸­å»é™¤çš„æ—¶é—´æœ‰å…³ã€‚å¢“ç¢‘æ¸…ç†å¿…é¡»è¢«å¤åˆ¶æ“ä½œæ‰€ç‰µåˆ¶ï¼Œä»¥è¾¾åˆ°å¤åˆ¶æ”¶æ•›ã€‚
+
+
+If a replicator detects that a remote drive is has failed, it will use the ring's "get_more_nodes" 
+interface to choose an alternate node to synchronize with.  The replicator can generally maintain 
+desired levels of replication in the face of hardware failures, though some replicas may not be 
+in an immediately usable location.
+
+å¦‚æœä¸€ä¸ªå¤åˆ¶å™¨å‘ç°ä¸€ä¸ªè¿œç¨‹å­˜å‚¨è®¾å¤‡å‡ºç°é—®é¢˜ï¼Œå®ƒå°†ä½¿ç”¨ç¯çš„â€œget_more_nodes"æ¥å£æ¥é€‰æ‹©ä¸€ä¸ªé¢„å¤‡çš„èŠ‚ç‚¹æ¥å°†æ•°æ®åŒæ­¥ç»™å®ƒã€‚
+å¤åˆ¶å™¨åœ¨é¢ä¸´ç¡¬ä»¶æ•…éšœæ—¶é€šå¸¸ä¼šç»´æŒæœŸæœ›æ°´å¹³çš„å¤åˆ¶æ“ä½œï¼Œå› æ­¤ä¸€äº›å‰¯æœ¬å¯èƒ½ä¸ä¼šé©¬ä¸Šå°±å¤„äºä¸€ä¸ªå¯ç”¨çš„åœ°ç‚¹ã€‚
+
+Replication is an area of active development, and likely rife with potential improvements to speed and correctness.
+
+å¤åˆ¶æ“ä½œæ˜¯ä¸€ä¸ªæ´»è·ƒçš„å¼€å‘ç‰ˆå—ï¼Œå¹¶ä¸”ææœ‰æ½œåŠ›ä»¥åŠ é€Ÿå¹¶ä¼˜åŒ–ä¹‹ã€‚
+
+There are two major classes of replicator - the db replicator, which replicates accounts and containers, 
+and the object replicator, which replicates object data.
+
+å¤åˆ¶å™¨ä¸­æœ‰ä¸¤ä¸ªä¸»è¦çš„ç±»---æ•°æ®åº“å¤åˆ¶å™¨ï¼Œå®ƒå¤åˆ¶è´¦å·å’Œå®¹å™¨ï¼Œå¦ä¸€ä¸ªæ˜¯å¯¹è±¡å¤åˆ¶å™¨ï¼Œå®ƒå¤åˆ¶å¯¹è±¡æ•°æ®ã€‚
+
+
+--------------
+DB Replication
+--------------
+
+The first step performed by db replication is a low-cost hash comparison to find out whether or not 
+two replicas already match.  Under normal operation, this check is able to verify that most databases 
+in the system are already synchronized very quickly.  If the hashes differ, the replicator brings the 
+databases in sync by sharing records added since the last sync point.
+
+æ•°æ®åº“åˆ é™¤æ“ä½œçš„ç¬¬ä¸€æ­¥æ˜¯ä½æˆæœ¬çš„æ¯”è¾ƒä»¥æ‰¾å‡ºæ˜¯å¦ä¸¤ä¸ªå‰¯æœ¬å·²ç»ç›¸åŒ¹é…ã€‚åœ¨ä¸€èˆ¬æ“ä½œä¸‹ï¼Œè¿™ä¸ªæ£€æŸ¥å¯ä»¥æŸ¥éªŒç³»ç»Ÿä¸­æœ€å¤šçš„æ•°æ®åº“å·²ç»è¿…é€Ÿåœ°åŒæ­¥ã€‚
+å¦‚æœå“ˆå¸Œä¸åŒï¼Œå¤åˆ¶å™¨å°†ä¼šä»æœ€åä¸€æ¬¡åŒæ­¥ç‚¹æ·»åŠ çš„è®°å½•æ¥å¯åŠ¨æ•°æ®åº“çš„åŒæ­¥ã€‚
+
+This sync point is a high water mark noting the last record at which two databases were known to be in sync, 
+and is stored in each database as a tuple of the remote database id and record id.  Database ids are unique 
+amongst all replicas of the database, and record ids are monotonically increasing integers.  After all new
+ records have been pushed to the remote database, the entire sync table of the local database is pushed, 
+ so the remote database knows it's now in sync with everyone the local database has previously synchronized with.
+
+è¿™ä¸ªåŒæ­¥ç‚¹æ˜¯ä¸ªé«˜æ°´å¹³çš„æ ‡è®°ä¸¤ä¸ªæ•°æ®åº“è¢«è®¤ä¸ºä¸€åŒæ­¥çš„æœ€è¿‘ä¸€æ¬¡è®°å½•ï¼Œå¹¶ä¸”è¢«åœ¨æ¯ä¸ªæ•°æ®åº“ä¸­æŒ‰ç…§ä¸€ä¸ªè¿œç¨‹æ•°æ®åº“IDå’Œè®°å½•IDçš„å…ƒç»„æ¥ä¿å­˜ã€‚
+æ•°æ®åº“IDåœ¨æ•°æ®åº“æ‰€æœ‰çš„å‰¯æœ¬ä¸­å¼å”¯ä¸€çš„ï¼Œå¹¶ä¸”è®°å½•IDæ˜¯å•è°ƒé€’å¢çš„è¯ä¹¦ã€‚å½“æ‰€æœ‰æ–°çš„è®°å½•éƒ½è¢«æ¨é€åˆ°è¿œç¨‹æ•°æ®åº“ä¹‹åï¼Œæœ¬åœ°æ•°æ®åº“çš„å…¨éƒ¨çš„åŒæ­¥è¡¨
+å°†ä¼šè¢«æ¨é€ï¼Œå› æ­¤è¿œç¨‹æ•°æ®åº“çŸ¥é“å®ƒç°åœ¨ä¸æœ¬åœ°æ•°æ®åº“ä¹‹å‰åŒæ­¥çš„æ‰€æœ‰æ•°æ®åº“æ˜¯åŒæ­¥çš„ã€‚
+ 
+If a replica is found to be missing entirely, the whole local database file is transmitted to the peer
+ using rsync(1) and vested with a new unique id.
+ 
+ å¦‚æœä¸€ä¸ªå‰¯æœ¬è¢«å‘ç°å…¨éƒ¨ä¸¢å¤±ï¼Œæ‰€æœ‰çš„æœ¬åœ°æ•°æ®åº“æ–‡ä»¶ä¼šè¢«ä½¿ç”¨ä¸€ä¸ªæ–°çš„å”¯ä¸€çš„IDå¼‚æ­¥åœ°ä¼ é€ç»™é‚£ä¸ªå•å…ƒ.
+
+In practice, DB replication can process hundreds of databases per concurrency setting per second 
+(up to the number of available CPUs or disks) and is bound by the number of DB transactions that must be performed.
+
+åœ¨å®è·µä¸­ï¼Œæ•°æ®åº“å¤åˆ¶æ“ä½œä¼šæ¯ç§’ä¼šå¤„ç†å‡ ç™¾ä¸ªæ•°æ®åº“çš„ä¸€è‡´æ€§é—®é¢˜ï¼ˆä»¥æœ‰æ•ˆCPUå’Œç£ç›˜æ•°é‡ä¸ºé™ï¼‰ï¼Œå¹¶ä¸”å—é™äºå¿…é¡»å¤„ç†çš„æ•°æ®åº“ä¼ è¾“çš„æ•°é‡ã€‚
+
+------------------
+Object Replicationå¯¹è±¡å¤åˆ¶æ“ä½œ
+------------------
+
+The initial implementation of object replication simply performed an rsync to push data from a local partition 
+to all remote servers it was expected to exist on.  While this performed adequately at small scale, replication 
+times skyrocketed once directory structures could no longer be held in RAM.  We now use a modification of this 
+scheme in which a hash of the contents for each suffix directory is saved to a per-partition hashes file. 
+ The hash for a suffix directory is invalidated when the contents of that suffix directory are modified.
+ 
+å¯¹è±¡å¤åˆ¶æ“ä½œæœ€åˆè¦å®ç°çš„å°±æ˜¯ç®€å•åœ°å°†æ•°æ®ä»æœ¬åœ°åˆ†åŒºå¼‚æ­¥åœ°æ¨é€åˆ°ç›®æ ‡ä½ç½®ã€‚å½“è¿™åœ¨ä¸€ä¸ªè¾ƒä½çš„æ¯”ä¾‹å……åˆ†åœ°æ‰§è¡Œæ—¶ï¼Œ
+å¤åˆ¶æ“ä½œä¼šå¤šæ¬¡æ€¥é€Ÿå‘ç”Ÿä¸€å•ç›®å½•ç»“æ„ä¸èƒ½è¢«å†…å­˜å­˜å–ã€‚æˆ‘ä»¬ç°åœ¨ä½¿ç”¨ä¸€ä¸ªä¿®æ”¹è¿‡çš„æ–¹æ¡ˆï¼Œæ­¤æ–¹æ¡ˆä¸­æ¯ä¸€ä¸ªåç¼€ç›®å½•å†…å®¹
+çš„å“ˆå¸Œä¼šè¢«ä¿å­˜åˆ°ä¸€ä¸ªæ¯åˆ†åŒºå“ˆå¸Œæ–‡ä»¶ã€‚å½“æ­¤åç¼€ç›®å½•çš„å†…å®¹å‘ç”Ÿä¿®æ”¹æ—¶ï¼Œå…¶å¯¹åº”çš„å“ˆå¸Œå°±ä¼šå¤±æ•ˆã€‚
+
+The object replication process reads in these hash files, calculating any invalidated hashes.  It then transmits
+ the hashes to each remote server that should hold the partition, and only suffix directories with differing hashes 
+ on the remote server are rsynced.  After pushing files to the remote server, the replication process notifies 
+ it to recalculate hashes for the rsynced suffix directories.
+ 
+å¯¹è±¡å¤åˆ¶æ“ä½œä¼šè¯»å–è¿™äº›å“ˆå¸Œæ–‡ä»¶ï¼Œè®¡ç®—æ‰€æœ‰æ— æ•ˆçš„å“ˆå¸Œã€‚ç„¶åä¼ é€é‚£äº›å“ˆå¸Œåˆ°ç®¡è¾–è¿™äº›åˆ†åŒºçš„è¿œç¨‹çš„æœåŠ¡å™¨ï¼Œ
+ç„¶ååªæœ‰ä¸è¿œç¨‹æœåŠ¡å™¨æœ‰ä¸åŒå“ˆå¸Œçš„åç¼€ç›®å½•ä¼šè¢«é‡æ–°åŒæ­¥ã€‚
+å°†æ–‡ä»¶æ¨é€åˆ°è¿œç¨‹æœåŠ¡å™¨ä¹‹åï¼Œå¤åˆ¶è¿›ç¨‹ä¼šé€šæŠ¥è¿™ä¸ªäº‹ä»¶ä»¥é‡æ–°è®¡ç®—é‚£äº›é‡æ–°åŒæ­¥çš„åç¼€ç›®å½•çš„å“ˆå¸Œã€‚
+
+Performance of object replication is generally bound by the number of uncached directories it has to traverse,
+ usually as a result of invalidated suffix directory hashes.  Using write volume and partition counts from our 
+ running systems, it was designed so that around 2% of the hash space on a normal node will be invalidated per day, 
+ which has experimentally given us acceptable replication speeds.
+
+å¯¹è±¡å¤åˆ¶çš„æ‰§è¡Œé€šå¸¸å—é™äºå¿…é¡»è¦éå†çš„æœªä¿å­˜ç›®å½•çš„æ•°é‡ï¼Œè¿™ä¸€èˆ¬æ˜¯ç”±æ— æ•ˆçš„åç¼€ç›®å½•å“ˆå¸Œæ‰€å¯¼è‡´çš„ã€‚ä½¿ç”¨ä»è¿è¡Œä¸­çš„ç³»ç»Ÿå†™å·å’Œåˆ†åŒºè®¡æ•°ï¼Œ
+è¿™æ ·è®¾è®¡æ˜¯ä¸ºåº”å¯¹å‡è®¾æ¯å¤©ä¸€ä¸ªèŠ‚ç‚¹ä¸Šçš„å“ˆå¸Œç©ºé—´å‡ºç°2%å·¦å³çš„å¤±æ•ˆçš„çŠ¶å†µï¼Œè¿™å®éªŒæ€§åœ°ç»™æˆ‘ä»¬äº†ä¸€ä¸ªå¯æ¥å—çš„å¤åˆ¶é€Ÿåº¦ã€‚
