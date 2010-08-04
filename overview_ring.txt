@@ -8,7 +8,8 @@ objects but each ring works in the same way. These rings are externally
 managed, in that the server processes themselves do not modify the rings, they
 are instead given new rings modified by other tools.
 
-环决定将数据在集群中存于何处。帐号数据库，容器数据库和individual的对象数据库都分别拥有一个环，这些环都以同样的方式工作。这些环是被从外部管理的，因为环服务器他们自己不回修改环本身，环是被其他的工具通过创建新环还实现修改的目的的。
+环决定将数据在集群中存于何处。帐号数据库，容器数据库和individual的对象数据库都分别拥有一个环，这些环都以同样的方式工作。
+这些环是被从外部管理的，因为环服务器他们自己不回修改环本身，环是被其他的工具通过创建新环还实现修改的目的的。
 
 The ring uses a configurable number of bits from a path's MD5 hash as a
 partition index that designates a device. The number of bits kept from the hash
@@ -18,7 +19,8 @@ cluster to work in batches of items at once which ends up either more efficient
 or at least less complex than working with each item separately or the entire
 cluster all at once.
 
-环使用一个从路径的MD5哈希得到的数量可配置的字节来作为分区索引来代表一个存储设备。字节数量防止哈希被认为是分区的能力，另外对分区能力而言字节数量被认为代表分区数量。............
+环使用一个从路径的MD5哈希得到的数量可配置的字节来作为分区索引来代表一个存储设备。字节数量防止哈希被认为是分区的能力，
+另外对分区能力而言字节数量被认为代表分区数量。............
 
 Another configurable value is the replica count, which indicates how many of
 the partition->device assignments comprise a single ring. For a given partition
@@ -27,7 +29,8 @@ replica's device. Zones can be used to group devices based on physical
 locations, power separations, network separations, or any other attribute that
 would lessen multiple replicas being unavailable at the same time.
 
-另外一个可配置参数是备份数量，它代表由多少分区到存储的任务构成一个环。对一个给定的分区数目，每一个备份的设备将不会于其他备份的存储处于同一区域。区域可以用来对所有存储依据存储的物理地址，能力分割,网络分割，或者其他任何可以减少同一时间无效备份的属性，来分组。
+另外一个可配置参数是备份数量，它代表由多少分区到存储的任务构成一个环。对一个给定的分区数目，每一个备份的设备将不会于其他备份的存储处于同一区域。
+区域可以用来对所有存储依据存储的物理地址，能力分割,网络分割，或者其他任何可以减少同一时间无效备份的属性，来分组。
 
 ------------
 Ring Builder
@@ -94,10 +97,10 @@ weight  float    The relative weight of the device in comparison to other
                  back into balance a device that has ended up with more or less
                  data than desired over time. A good average weight of 100.0
                  allows flexibility in lowering the weight later if necessary.
-				 此存储相比于其他存储的权重。这通常与存储的存储空间成正比。
-				 比如一个存储有1T存储空间，对应的权重是100.0，而有另一个存储有2T的存储空间，
-				 其对应的权重是200.0。权重也可以被用来当一个存储持续地被过载或过少使用时来实现负载平衡。
-				 一个很好的平均为100.0的权重应当有很好的灵活性以使在后面的需要中降低权重。
+		 此存储相比于其他存储的权重。这通常与存储的存储空间成正比。
+		 比如一个存储有1T存储空间，对应的权重是100.0，而有另一个存储有2T的存储空间，
+		 其对应的权重是200.0。权重也可以被用来当一个存储持续地被过载或过少使用时来实现负载平衡。
+		 一个很好的平均为100.0的权重应当有很好的灵活性以使在后面的需要中降低权重。
 ip      string   The IP address of the server containing the device.包含此存储的服务器的IP。
 port    int      The TCP port the listening server process uses that serves
                  requests for the device.服务器使用此存储提供服务时的端口号
@@ -108,8 +111,8 @@ meta    string   A general-use field for storing additional information for the
                  processes, but can be useful in debugging. For example, the
                  date and time of installation and hardware manufacturer could
                  be stored here.
-				 一个用来保存存储设备附加信息的一般用途的域。这个信息并不被服务器直接使用，但是可以在debugging时使用。
-				 比如安装日期和硬件厂商的信息科存储于此。
+		 一个用来保存存储设备附加信息的一般用途的域。这个信息并不被服务器直接使用，但是可以在debugging时使用。
+		 比如安装日期和硬件厂商的信息科存储于此。
 ======  =======  ==============================================================
 
 Note: The list of devices may contain holes, or indexes set to None, for
