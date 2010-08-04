@@ -4,7 +4,7 @@ The Account Reaper
 
 The Account Reaper removes data from deleted accounts in the background.
 
-�˺��ո�������ں�̨����ɾ���˺ŵ�������������
+账号收割机负责在后台将已删除账号的数据清理掉。
 
 An account is marked for deletion by a reseller through the services server's
 remove_storage_account XMLRPC call. This simply puts the value DELETED into the
@@ -14,10 +14,10 @@ retention time and no undelete; it is assumed the reseller will implement such
 features and only call remove_storage_account once it is truly desired the
 account's data be removed.
 
-һ���˺Ž������Ϊɾ������������ͨ�����ǵķ���������remove_storage_account XMLRPC
-�������򵥵����˺����ݿ�(������)��account_stat����status����PUT��һ��DELETED��
-���ʾ���˺��µ������Ժ󽫱�ɾ��������û�б���ʱ�䣬Ҳû��ɾ���ָ������Ǽٶ�������
-ȷʵϣ��ִ��������������ҽ�������remove_storage_accountһ�ξͱ�ʾ���������ϣ�����˺ŵ����ݱ�ɾ����
+一个账号将被标记为删除，当经销商通过他们的服务器调用remove_storage_account XMLRPC
+请求。这会简单地往账号数据库(及副本)的account_stat表的status列中PUT入一个DELETED，
+这表示此账号下的数据稍后将被删除。并且没有保留时间，也没有删除恢复；我们假定经销商
+确实希望执行这个操作，并且仅仅调用remove_storage_account一次就表示经销商真的希望此账号的数据被删除。
 
 The account reaper runs on each account server and scans the server
 occasionally for account databases marked for deletion. It will only trigger on
@@ -27,10 +27,10 @@ to delete one account might improve deletion speed, but requires coordination
 so they aren't duplicating effort. Speed really isn't as much of a concern with
 data deletion and large accounts aren't deleted that often.
 
-�˺��ո��������ÿһ���˺ŷ������ϣ����Ҽ�Ъ��ɨ����������ҳ��˺����ݿ����Ѿ�����ʶɾ�����˺š�
-ֻ�������˺ŷ������е����ڵ�ᴥ���˺�ɾ����������˶���˺ŷ���������ͬʱ���Դ˲�����
-ʹ�ö���˺ŷ�������ɾ��һ���˺ſ��ܻ�����ɾ�����ٶȣ�����Ҳ��Ҫ�������ϣ��������������������Ч����
-������ɾ����������������˵���ٶ��治��ʲôҪ�������⣬���Ҵ����˺ŵ�ɾ����������ôƵ����
+账号收割机运行在每一个账号服务器上，并且间歇地扫描服务器以找出账号数据库中已经被标识删除的账号。
+只有所有账号服务器中的主节点会触发账号删除操作，因此多个账号服务器不会同时尝试此操作。
+使用多个账号服务器来删除一个账号可能会提升删除的速度，但是也需要更多的配合，因此这样不会产生更多的效果。
+与数据删除操作的慎重性来说，速度真不是什么要紧的问题，而且大量账号的删除不可能那么频繁。
 
 The deletion process for an account itself is pretty straightforward. For each
 container in the account, each object is deleted and then the container is
@@ -43,11 +43,11 @@ troublesome spot. The account reaper will keep trying to delete an account
 until it evetually becomes empty, at which point the database reclaim process
 within the db_replicator will eventually remove the database files.
 
-һ���˺ŵ�ɾ�������Ƿǳ���ֱ�׵ġ����˺��µ�ÿһ��������ÿһ�������ȱ�ɾ����Ȼ��������ɾ����
-�κ�ɾ����������ʧ��ʱ��������ֹȫ�ֵĽ��̣����ǻ����յ���ȫ�ֽ��̵Ĵ��󣨱��磬���һ������ɾ����ʱ��
-�����Ͳ������Ժ󱻳ɹ�ɾ��������������˺��޷����ɹ�ɾ������������һ��ʧ��ʱȫ�ֽ�����Ȼ����ǰ�ƽ���
-��ʹ���ʧ�ܲ��ᵼ�¼�Ⱥ�ռ�Ļ�����Ϊһ������������˺��ո��Ҳ�᲻�ϳ���ɾ���Ǹ��˺ţ�֪��������Ϊ�գ�
-������db_replicatorָ������ݿ���ս��̻�����ɾ����Ӧ�����ݿ��ļ���
+一个账号的删除操作是非常简单直白的。对账号下的每一个容器，每一个对象先背删除，然后容器被删除。
+任何删除请求遭遇失败时都不会终止全局的进程，但是会最终导致全局进程的错误（比如，如果一个对象删除超时，
+容器就不会在稍后被成功删除并且因此最终账号无法被成功删除）。当遭遇一个失败时全局进程仍然会向前推进，
+以使这个失败不会导致集群空间的回收因为一个问题而挂起。账号收割机也会不断尝试删除那个账号，知道它最终为空，
+并且用db_replicator指向的数据库回收进程会最终删除响应的数据库文件。
 
 -------
 History
@@ -60,9 +60,9 @@ ReST API. However, the downside was that it would use proxy resources and log
 everything when it didn't really need to. Also, it would likely need a
 dedicated server or two, just for issuing the delete requests.
 
-�����ͨ��һ����ȫ�ⲿ�ĺ�����ɾ��һ���˺ŵ�һ���򵥵ķ����Ǳ���Ϊ���󲻶�ϵͳ���иı䡣
-���е����ݻ�򵥵�ͨ��������Rest�ӿ���ɾ����Ȼ��������Ч������Ҫʹ�ô�����Դ�������ڲ�
-��Ҫ��ʱ��Ҳ���ò������е��¼�����¼��־��ͬʱ����������Ҫһ�����������ķ��������ⷢɾ������
+最初，通过一个完全外部的呼叫来删除一个账号的一个简单的方法是被视为请求不对系统进行改变。
+所有的数据会简单地通过公开的Rest接口来删除。然而，负面效果是需要使用代理资源，并且在不
+需要的时候也不得不将所有的事件都记录日志。同时，它可能需要一到两个独立的服务器来封发删除请求。
 
 A completely bottom-up approach was also considered, where the object and
 container servers would occasionally scan the data they held and check if the
@@ -71,9 +71,9 @@ reclamation with no impact on the proxies or logging, but the downside was that
 nearly 100% of the scanning would result in no action creating a lot of I/O
 load for no reason.
 
-Ҳ�����ǹ�һ����ȫ���϶��µķ����������������������������Ъ��ɨ����������Ͻ�����ݲ��Ҽ��
-�Ƿ��˺ű�ɾ��������˺ű�ɾ����ɾ����Ӧ�����ݡ������ǻ��յ��ٶȣ����Ҳ���û�д�������־�ĳ�ͻ��
-���ǲ������ǽ���100%��ɨ�����Ե���ޱ�Ҫ�ص��´�����I/O������
+也曾考虑过一个完全自上而下的方案，这样对象和容器服务器都间歇地扫描他们所管辖的数据并且检查
+是否账号被删除，如果账号被删除则删除对应的数据。优势是回收的速度，并且不会没有代理和日志的冲突，
+但是不利的是将近100%的扫描会无缘由无必要地导致大量的I/O操作。
 
 A more container server centric approach was also considered, where the account
 server would mark all the containers for deletion and the container servers
@@ -87,12 +87,12 @@ wouldn't be seemed wasteful. The db_replicator could do this work while
 performing its replication scan, but it would have to spawn and track deletion
 processes which seemed needlessly complex.
 
-�����ǹ�һ�������������������Ϊ���ĵķ����������˺ŷ�������������Ҫ��ɾ����������Ȼ������������
-��ɾ����������ж���Ȼ����ɾ�������Լ�������һ�������ĺô�Ҳ���ڻ�����Щ�д����������˺�ʱ���ѵ��ٶȣ�
-����Ҳ��һ�������ĵط��ǻ��и���ķ�ֵ���ɡ����̻�ΪӦ�Է�ֵ���ɶ��������������ջ����ٶȵ�����Ҳ�������ڣ�
-������ʣ��һ�������ӵĳ���ͬʱ�������б��Ϊɾ������������ɨ�裬�ڶ���ʱ�����ƺ������ǲ����õġ�
-db_replicator��ִ��ɾ��ʱɨ��ʱ������Щ���������Ǳ������첢��׷��ɾ�������·�Ҳ�ᵼ�²���Ҫ�ĸ����ԡ�
+还考虑过一个更多地以容器服务器为中心的方案，这样账号服务器会标记所有要背删除的容器，然后容器服务器
+会删除里面的所有对象，然后再删除它们自己。这样一个显著的好处也是在回收那些有大量容器的账号时极佳的速度，
+但是也有一个不利的地方是会有更大的峰值负荷。进程会为应对峰值负荷而减缓，这样最终回收速度的优势也不复存在，
+而仅仅剩下一个更复杂的程序。同时，对所有标记为删除的容器进行扫描，在多数时候看来似乎并不是不经济的。
+db_replicator在执行删除时扫描时会做这些工作，但是必须制造并且追踪删除操作仿佛也会导致不必要的复杂性。
 
 In the end, an account server centric approach seemed best, as described above.
 
-���һ��һ�˺ŷ�����Ϊ���ĵķ�����������������ģ�����������������������
+最后，一个一账号服务器为中心的方案看起来是最优秀的，就如以上所描述的那样。
