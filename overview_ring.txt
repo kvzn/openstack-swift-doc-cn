@@ -139,8 +139,8 @@ partition count for the ring. Each integer in the array('I') is an index into
 the above list of devices. The partition list is known internally to the Ring
 class as _replica2part2dev_id.
 
-这是一个存储设备ID的数组的列表。最外部的列表包含每个备份的数组。每个数组有一个跟环的分区个数相等的长度值。
-数组中的每一个整数一个前述列表的索引。分区列表被环类内部识别为_replica2part2dev_id.
+这是一个存储设备ID的数组的列表。最外部的列表包含每个副本的数组。每个数组有一个跟环的分区个数相等的长度值。
+数组中的每一个整数是一个前述列表的索引。分区列表被环类内部识别为_replica2part2dev_id.
 
 So, to create a list of device dictionaries assigned to a partition, the Python
 code would look like: ``devices = [self.devs[part2dev_id[partition]] for
