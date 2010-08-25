@@ -1,0 +1,164 @@
+=======================================================
+Building and Deploying Custom Debian packages for Swift构建及部署Swift的用户Debian安装包
+=======================================================
+
+This documents setting up the prerequisites, downloading the code and building
+Debian packages necessary to deploy the various components of the swift 
+project code.  These steps were done on a server running 
+*Ubuntu 10.04 LTS (Lucid Lynx)*, but should give a good idea what to do on 
+other distros.
+
+这个文档建立先决条件，下载代码然后构建必要的Debian包来部署Swift项目的各种组件。
+这些步骤是在Ubuntu 10.04 LTS进行的，对其他的操作系统则不敢保证。
+
+------------------------------------------
+Instructions for Deploying Swift-Core PPAs部署Swift-core PPAs指南
+------------------------------------------
+
+These packages are built from the current development branch "trunk" 
+
+这些包是从目前“trunk”开发分支构建来的
+
+* Add swift-core/ppa repository. As root:::
+添加swift-core/ppa源，用root帐号
+       apt-get install python-software-properties
+       add-apt-repository ppa:swift-core/trunk
+       apt-get update
+
+* Install the swift base packages::
+安装swift基本包
+       apt-get install python-swift
+       apt-get install swift
+
+* Install the swift packages depending on your implementations::
+基于你的实施安装swift包
+       apt-get install swift-auth
+       apt-get install swift-proxy
+       apt-get install swift-account
+       apt-get install swift-container
+       apt-get install swift-object
+
+* Copy sample configuration files to `/etc/swift` directory 
+  and rename them to `*.conf files`::
+将样板配置文件拷贝到/etc/swift目录并且重命名位*.conf     
+       cp -a /usr/share/doc/swift/*.conf-sample /etc/swift/ 
+       cd /etc/swift ; rename 's/\-sample$//' *.conf-sample
+
+* For servers running the swift-account, swift-container or 
+  swift-object the rsync.conf file should be moved to 
+  the `/etc` directory::
+对运行swift-account,swift-container或者swift-object的服务器，rsync.con文件需要被移动到/etc目录
+
+       cd /etc/swift
+       mv rsyncd.conf /etc
+
+* Modify configuration files to meet your implementation requirements
+  the defaults have been not been geared to a multi-server implementation.
+修改配置文件以适应你的实施需求，默认的配置没有针对多个服务器的实施方案。
+
+---------------------------------------------------
+Instructions for Building Debian Packages for Swift构建Swift的Debian包指南
+---------------------------------------------------
+
+* Add swift-core/ppa repository and install prerequisites. As root::
+添加swift-core/ppa源，安装必要条件，用root帐号
+
+       apt-get install python-software-properties
+       add-apt-repository ppa:swift-core/ppa
+       apt-get update
+       apt-get install curl gcc bzr python-configobj python-coverage python-dev 
+       python-nose python-setuptools python-simplejson python-xattr  
+       python-webob python-eventlet python-greenlet debhelper python-sphinx 
+       python-all python-openssl
+
+* As you
+
+  #. Tell bzr who you are::
+告诉bzr你是谁
+
+       bzr whoami '<Your Name> <youremail@.example.com>'
+       bzr lp-login <your launchpad id>
+
+  #. Create a local bazaar repository for dev/testing:: 
+创建一个本地bazaar的开发与测试仓库
+       bzr init-repo swift
+
+  #. Pull down the swift/debian files::
+摧毁swift/debian文件
+
+       cd swift 
+       bzr branch lp:~swift-core/swift/debian
+
+  #. If you want to merge in a branch::
+如果你想合并入一个分支  
+
+       cd debian
+       bzr merge lp:<path-to-branch>
+  
+  #. Create the debian packages:: 
+创建debian包
+ 
+       cd debian 
+       bzr bd --builder='debuild -uc -us'
+ 
+  #. Upload packages to your target servers::
+更新包到你的目标服务器 
+
+       cd .. 
+       scp *.deb root@<swift-target-server>:~/.
+
+
+----------------------------------------------------
+Instructions for Deploying Debian Packages for Swift部署swift的Debian包指南
+----------------------------------------------------
+
+* On a Target Server, As root:
+在一个目标服务器上，用root帐号
+
+  #. Setup the swift ppa::
+安装swift ppa
+ 
+       add-apt-repository ppa:swift-core/ppa
+       apt-get update
+
+  #. Install dependencies::
+安装依赖 
+
+       apt-get install rsync python-openssl python-setuptools python-webob
+       python-simplejson python-xattr python-greenlet python-eventlet
+
+  #. Install base packages::
+安装基础包
+
+       dpkg -i python-swift_<version>_all.deb 
+       dpkg -i swift_<version>_all.deb
+
+  #. Install packages depending on your implementation::
+基于你的实施方案来安装相应包
+
+       dpkg -i swift-auth_<version>_all.deb    
+       dpkg -i swift-proxy_<version>_all.deb
+       dpkg -i swift-account_<version>_all.deb  
+       dpkg -i swift-container_<version>_all.deb  
+       dpkg -i swift-object_<version>_all.deb  
+       dpkg -i swift-doc_<version>_all.deb
+
+  #. Copy sample configuration files to `/etc/swift` directory 
+     and rename them to `*.conf files`::
+将样板配置文件拷贝到/etc/swift目录，重命名位*.conf
+
+       cp -a /usr/share/doc/swift/*.conf-sample /etc/swift/ 
+       cd /etc/swift 
+       rename 's/\-sample$//' *.conf-sample
+
+  #. For servers running the swift-account, swift-container or 
+     swift-object the rsync.conf file should be moved to 
+     the `/etc` directory::
+对于运行swift-account,swift-container或者swift-obejct的服务器，将rsyncdb.conf移动到/etc目录
+
+       cd /etc/swift/ 
+       mv rsyncd.conf /etc
+
+  #. Modify configuration files to meet your implementation requirements
+     the defaults have been not been geared to a multi-server implementation.
+修改配置未见以适应你的实施需求。默认的配置不针对多服务器的实施情况。
