@@ -8,8 +8,9 @@ objects but each ring works in the same way. These rings are externally
 managed, in that the server processes themselves do not modify the rings, they
 are instead given new rings modified by other tools.
 
-环决定将数据在集群中存于何处。帐号数据库，容器数据库和每个objects都分别拥有一个环，这些环都以同样的方式工作。
-这些环是被从外部管理的，因为环服务器他们自己不会修改环本身，环是被其他的工具通过创建新环来实现修改的目的的。
+环决定将数据在集群中存于何处。accounts数据库，containers数据库和objects都分别拥有一个环，
+这些环都以同样的方式工作。这些环是被从外部管理的，因为环服务器他们自己不会修改环本身，环是被其
+他的工具通过创建新环来实现修改的目的的。
 
 The ring uses a configurable number of bits from a path's MD5 hash as a
 partition index that designates a device. The number of bits kept from the hash
@@ -19,9 +20,10 @@ cluster to work in batches of items at once which ends up either more efficient
 or at least less complex than working with each item separately or the entire
 cluster all at once.
 
-环使用一些从路径的MD5哈希得到的数量可配置的字节来作为分区索引来代表一个存储设备。所维护的那些由哈希而来的字节，
-被视为分区的能力，而对分区能力来说，这些字节则表示分区数量。对完整的MD5哈希环进行分区可以使集群的其它部分在立即处理多项内容时，
-比每项内容单独处理，和全面调动整个集群，都更能得到极好的有效性和极小的复杂性。
+环使用一些从路径的MD5哈希得到的数量可配置的字节来作为partition索引来代表一个存储设备。所维护的
+那些由哈希而来的字节数目，被视为partition的能力，而对partition能力来说，这些字节则表示分区数量。
+对完整的MD5哈希环进行分区可以使集群的其它部分在立即处理多项内容时，比每项内容单独处理，和全面调动
+整个集群，都更能得到极好的有效性和极小的复杂性。
 
 Another configurable value is the replica count, which indicates how many of
 the partition->device assignments comprise a single ring. For a given partition
@@ -30,9 +32,10 @@ replica's device. Zones can be used to group devices based on physical
 locations, power separations, network separations, or any other attribute that
 would lessen multiple replicas being unavailable at the same time.
 
-另外一个可配置参数是备份的数量，它代表由多少分区到存储的任务构成一个单独的环。对一个给定的分区数目，
-每一个备份的设备将不会于其他备份的存储处于同一区域。区域可以用来对所有存储依据存储的物理地址，能力分割,网络分割，
-或者其他任何可以减少同一时间无效备份的属性，来分组。
+另外一个可配置参数是副本的数量，它代表由多少partition到device的映射构成一个单独的环。对一个
+给定的分区数目，每一个副本的device将不会于其他备份的device处于同一区域。zone可以用来对所有
+devices依据存储的物理地址，能力分割,网络分割，或者其他任何可以减少同一时间无效备份的属性，来
+进行分组。
 
 ------------
 Ring Builder
@@ -47,9 +50,10 @@ how the ring-builder manages changes to the ring, using a slightly older ring
 usually just means one of the three replicas for a subset of the partitions
 will be incorrect, which can be easily worked around.
 
-所有的环都由环构造器来创建和管理。环构造器将分区赋予存储设备并将一个优化的Python结构体写入一个压缩的文件存在磁盘上，
-以将此文件传送给处理服务器。处理服务器偶尔检查此结构文件修改的时间并且在需要的时候将此结构体重新载入内存。
-正因为环构造器管理环的变更的方式，使用一个稍微过时的环通常意味着分区对应的备份的三个中有一个是不正确的，但这也可很容易地变通解决。
+所有的环都由环构造器来创建和管理。环构造器将partitions分配给devices并将一个优化的Python结构体
+写入一个gzip压缩的文件存在磁盘上，以将此文件传送给处理服务器。处理服务器不定期检查此结构文件修改的
+时间并且在需要的时候将此结构体重新载入内存。正因为环构造器管理环的变更的方式，使用一个稍微过时的环
+通常意味着分区对应的备份的三个中有一个是不正确的，但这也可很容易地变通解决。
 
 The ring-builder also keeps its own builder file with the ring information and
 additional data required to build future rings. It is very important to keep
@@ -62,10 +66,12 @@ data stored will have to be replicated to new locations. So, recovery from a
 builder file loss is possible, but data will definitely be unreachable for an
 extended time.
 
-环构造器同时也维护它自己的包含环的信息以及其他在创建新的环时所需要的附加信息的构造文件。保有这些构造文件的几个副本是相当重要的。
-一个选择是在此环构造器往目标服务器拷贝环数据文件时，也将构造文件复制到每个服务器上。另一个选择是将构造文件自行在集群中备份。
-构造文件的彻底丢失意味着必须根据推测来拼凑一个新的环，几乎所有的分区都将不再被赋予不同的存储设备，
-并且因此几乎所有的存储的数据都必须被复制到新的地点。因此，恢复一个丢失的环构造文件也是可以做到的，但是当时间越久时，数据便铁定不能再得到。
+环构造器同时也维护它自己的包含环的信息以及其他在创建新的环时所需要的附加信息的构造文件。保有这些
+构造文件的几个副本是相当重要的。一个选择是在此环构造器往目标服务器拷贝环数据文件时，也将构造文件
+复制到每个服务器上。另一个选择是将构造文件自行在集群中备份(upload)。构造文件的彻底丢失意味着必
+须根据推测来拼凑一个新的环，几乎所有的分区都将不再被赋予不同的存储设备，并且因此几乎所有的存储的
+数据都必须被复制到新的地点。因此，恢复一个丢失的环构造文件也是可以做到的，但是当时间越久时，数据
+便铁定不能再得到。
 
 -------------------
 Ring Data Structure
@@ -76,7 +82,8 @@ in the cluster, a list of lists of device ids indicating partition to device
 assignments, and an integer indicating the number of bits to shift an MD5 hash
 to calculate the partition for the hash.
 
-环数据结构体有三个顶级域构成：集群中存储的列表，分区所对应存储设备的列表的列表，以及一个代表将MD5哈希换算出目标分区的字节串的字节数量的整数。
+环数据结构体有三个顶级域构成：集群中存储的列表，分区所对应存储设备的列表的列表，以及一个代表将
+MD5哈希换算出目标分区的字节串的字节数量的整数。
 
 ***************
 List of Devices存储列表
@@ -88,8 +95,10 @@ the list of devices is a dictionary with the following keys:
 存储设备列表被环类内部用dev来识别。存储设备列表中的每一个条目都是一个包含以下键值的字典：
 
 ======  =======  ==============================================================
-id      integer  The index into the list devices.存储索引。
-zone    integer  The zone the devices resides in.存储所在区域。
+id      integer  The index into the list devices.
+				 存储索引。
+zone    integer  The zone the devices resides in.
+				 存储所在区域。
 weight  float    The relative weight of the device in comparison to other
                  devices. This usually corresponds directly to the amount of
                  disk space the device has compared to other devices. For
@@ -99,22 +108,25 @@ weight  float    The relative weight of the device in comparison to other
                  back into balance a device that has ended up with more or less
                  data than desired over time. A good average weight of 100.0
                  allows flexibility in lowering the weight later if necessary.
-		 此存储相比于其他存储的权重。这通常与存储的存储空间成正比。
-		 比如一个存储有1T存储空间，对应的权重是100.0，而有另一个存储有2T的存储空间，
-		 其对应的权重是200.0。权重也可以被用来当一个存储持续地被过载或过少使用时来实现负载平衡。
-		 一个很好的平均为100.0的权重应当有很好的灵活性以使在后面的需要中降低权重。
-ip      string   The IP address of the server containing the device.包含此存储的服务器的IP。
+				 此存储相比于其他存储的权重。这通常与存储的存储空间成正比。比如一个存储有1T存储
+				 空间，对应的权重是100.0，而有另一个存储有2T的存储空间，其对应的权重是200.0。
+				 权重也可以被用来当一个存储持续地被过载或过少使用时来实现负载平衡。一个很好的平
+				 均为100.0的权重应当有很好的灵活性以使在后面的需要中降低权重。
+ip      string   The IP address of the server containing the device.
+				 包含此存储的服务器的IP。
 port    int      The TCP port the listening server process uses that serves
-                 requests for the device.服务器使用此存储提供服务时的端口号
+                 requests for the device.
+				 服务器使用此存储提供服务时的端口号
 device  string   The on disk name of the device on the server.
-                 For example: sdb1服务器上存储的名字，比如sdb1
+                 For example: sdb1
+				 服务器上存储的名字，比如sdb1
 meta    string   A general-use field for storing additional information for the
                  device. This information isn't used directly by the server
                  processes, but can be useful in debugging. For example, the
                  date and time of installation and hardware manufacturer could
                  be stored here.
-		 一个用来保存存储设备附加信息的一般用途的域。这个信息并不被服务器直接使用，但是可以在debugging时使用。
-		 比如安装日期和硬件厂商的信息科存储于此。
+		 		 一个用来保存存储设备附加信息的通用域。此信息并不被服务器直接使用，但是
+				 可以在debugging时使用。比如安装日期和硬件厂商的信息科存储于此。
 ======  =======  ==============================================================
 
 Note: The list of devices may contain holes, or indexes set to None, for
@@ -124,13 +136,14 @@ to 0.0. To obtain a list of active devices (for uptime polling, for example)
 the Python code would look like: ``devices = [device for device in self.devs if
 device and device['weight']]``
 
-注意：存储设备的列表可能包含一些漏洞，或者对应不到任何存储设备的索引，比如一个已经从集群中移去的存储设备。
-一般，存储设备的id都不能重复使用。同时，当一些设备的权重被临时设置为0.0时，它们也是不可用的。如果想得到活动存储的列表（运行时投票），
-Python代码可以写成这样："`devices = [device for device in self.devs if
-device and device['weight']]"
+注意：存储设备的列表可能包含一些漏洞，或者对应不到任何存储设备的索引，比如一个已经从集群中移去的
+存储设备。一般，存储设备的id都不能重复使用。同时，当一些设备的权重被临时设置为0.0时，它们也是不
+可用的。如果想得到活动存储的列表（运行时投票），Python代码可以写成这样：
+"devices = [device for device in self.devs if device and device['weight']]"
 
 *************************
-Partition Assignment List分区任务分配列表
+Partition Assignment List 
+Partition分配列表
 *************************
 
 This is a list of array('I') of devices ids. The outermost list contains an
@@ -139,22 +152,25 @@ partition count for the ring. Each integer in the array('I') is an index into
 the above list of devices. The partition list is known internally to the Ring
 class as _replica2part2dev_id.
 
-这是一个存储设备ID的数组的列表。最外部的列表包含每个副本的数组。每个数组有一个跟环的分区个数相等的长度值。
-数组中的每一个整数是一个前述列表的索引。分区列表被环类内部识别为_replica2part2dev_id.
+这是一个存储设备ID的数组的列表。最外层的列表包含了每个副本的数组。每个数组有一个跟环的分区个数相等
+的长度值。数组中的每一个整数是一个前述列表的索引。分区列表被环类内部识别为_replica2part2dev_id.
 
 So, to create a list of device dictionaries assigned to a partition, the Python
 code would look like: ``devices = [self.devs[part2dev_id[partition]] for
 part2dev_id in self._replica2part2dev_id]``
 
-因此创建一个分派给分区的设备列表的字典，Python代码会是这样："devices = [self.devs[part2dev_id[partition]] for
-part2dev_id in self._replica2part2dev_id]"
+因此创建一个分派给分区的设备列表的字典，Python代码会是这样：
+"devices = [self.devs[part2dev_id[partition]] for 
+		   						part2dev_id in self._replica2part2dev_id]"
 
 array('I') is used for memory conservation as there may be millions of
 partitions.
 
 此数组由内存保存，因为会有百万的分区。
+
 *********************
-Partition Shift Value分区转换值
+Partition Shift Value
+分区转换值
 *********************
 
 The partition shift value is known internally to the Ring class as _part_shift.
@@ -165,8 +181,9 @@ in this process. For example, to compute the partition for the path
 unpack_from('>I', md5('/account/container/object').digest())[0] >>
 self._part_shift``
 
-分区转换值被环类内部识别为_part_shift.这个值用来转换成一个哈希，此哈希确定与此哈希对应的数据应当存于哪个分区上。
-只有此哈希开头的4个字节在此进程中被使用。比如，要计算与path:/account/container/object对应的分区，Python代码会是这样：
+分区转换值被环类内部识别为_part_shift.这个值用来转换一个哈希，以计算出与此哈希对应的数据应当
+存于哪个分区上。只有此哈希开头的4个字节在此进程中被使用。比如，要计算与
+path:/account/container/object对应的分区，Python代码会是这样：
 "partition =unpack_from('>I', md5('/account/container/object').digest())[0] >>
 self._part_shift"
 
@@ -181,9 +198,9 @@ If there are 1,000 devices of equal weight they will each desire 1,048.576
 partitions. The devices are then sorted by the number of partitions they desire
 and kept in order throughout the initialization process.
 
-环的初始构建首先要计算那些理想状况下可以被基于存储设备的权重分派给存储设备的分区的数量。
-比如，如果分区能力是20，则环将有1,048,576个分区。如果有权重相等的1,000个存储，
-它们会需要1,048.576个分区。然后存储设备会被依照它们各自需要的分区数量来排序，并且被初始化进程从头至尾地保有。
+环的初始构建首先要计算那些理想状况下可以被基于存储设备的权重分派给存储设备的分区的数量。比如，如果
+分区能力是20，则环将有1,048,576个分区。如果有权重相等的1,000个存储，它们会需要1,048.576个分区。
+然后存储设备会被依照它们各自需要的分区数量来排序，并且被初始化进程从头至尾地保有。
 
 Then, the ring builder assigns each partition's replica to the device that
 desires the most partitions at that point, with the restriction that the device
@@ -191,9 +208,9 @@ is not in the same zone as any other replica for that partition. Once assigned,
 the device's desired partition count is decremented and moved to its new sorted
 location in the list of devices and the process continues.
 
-然后环构造器分派每一个分区的备份给那些此刻渴望最多分区的存储设备，并且根据限制，
-存储设备不会与其他副本所在的存储设备位于同一区域。一旦被分派任务，
-则那个存储设备需求的分区数量就会减少并且被移动到设备排序队列中新的位次。
+然后环构造器分派每一个分区的备份给那些此刻渴望最多分区的存储设备，并且根据限制，存储设备不会与其他
+副本所在的存储设备位于同一区域。一旦被分派任务，则那个存储设备需求的分区数量就会减少并且被移动到设
+备排序队列中新的位次。
 
 When building a new ring based on an old ring, the desired number of partitions
 each device wants is recalculated. Next the partitions to be reassigned are
@@ -203,11 +220,10 @@ now desire have random partitions unassigned from them and added to the
 gathered list. Lastly, the gathered partitions are then reassigned to devices
 using a similar method as in the initial assignment described above.
 
-当依据一个旧的环来创建一个新环时，每个存储设备需求的分区数量将被重新计算。
-然后会被重新分配的分区会被收集起来。任何被删除的存储都会被去掉分派给它的分区，
-并且将这些分区添加到收集列表中。任何拥有多于需求的分区的存储都会随机去掉一些分区，
-并且将这些分区添加到收集列表中。最终，收集起来的分区会被重新分配给别的存储，
-就像上面所说的最初的分派那样。
+当依据一个旧的环来创建一个新环时，每个存储设备需求的分区数量将被重新计算。然后会被重新分配的分区
+会被收集起来。任何被删除的存储都会被去掉分派给它的分区，并且将这些分区添加到收集列表中。任何拥有
+多于需求的分区的存储都会随机去掉一些分区，并且将这些分区添加到收集列表中。最终，收集起来的分区会
+被重新分配给别的存储，就像上面所说的最初的分派那样。
 
 Whenever a partition has a replica reassigned, the time of the reassignment is
 recorded. This is taken into account when gathering partitions to reassign so
@@ -217,10 +233,9 @@ min_part_hours. This restriction is ignored for replicas of partitions on
 devices that have been removed, as removing a device only happens on device
 failure and there's no choice but to make a reassignment.
 
-每当一个分区分派一个副本，分派的时间就会被记录。这是考虑到当收集分区以再分派的账号
-因此没有分区会被移动两次。这个可配置次数被环构造器类内部识别为min_part_hours。
-已被删除的存储上的分区副本的限制会被忽略，因为只有当设备出现问题时才会被删除，
-这时没有别的选择只有重新分派。
+每当一个分区分派一个副本，分派的时间就会被记录。这是考虑到当收集分区以再分派的账号因此没有分区会
+被移动两次。这个可配置次数被环构造器类内部识别为min_part_hours。已被删除的存储上的分区副本的
+限制会被忽略，因为只有当设备出现问题时才会被删除，这时没有别的选择只有重新分派。
 
 The above processes don't always perfectly rebalance a ring due to the random
 nature of gathering partitions for reassignment. To help reach a more balanced
@@ -229,8 +244,8 @@ when the balance doesn't improve by at least 1% (indicating we probably can't
 get perfect balance due to wildly imbalanced zones or too many partitions
 recently moved).
 
-以上的进程不总是完美地负载平衡一个环源于自然随机收集的分区。为得到一个更均衡的环，
-负载均衡进程会执行几次知道接近完美均衡或者已经无法再优化（当有过多分区刚被移动时）。
+以上的进程不总是完美地负载平衡一个环源于自然随机收集的分区。为得到一个更均衡的环，负载均衡进程会
+执行几次知道接近完美均衡或者已经无法再优化（当有过多分区刚被移动时）。
 
 -------
 History
@@ -242,8 +257,8 @@ perhaps even fundamentally changed if new ideas emerge. This section will try
 to describe the previous ideas attempted and attempt to explain why they were
 discarded.
 
-环的代码在到达目前的状况已经到达一个稳定的状况之前，经历过很多讨论研究。当有新的主意出现时，
-之前的算法就可能被调整或者甚至从根本上改变。这一节将尝试描述之前的一些想法和为什么这些想法被摒弃。
+环的代码在到达目前的状况已经到达一个稳定的状况之前，经历过很多讨论研究。当有新的主意出现时，之前
+的算法就可能被调整或者甚至从根本上改变。这一节将尝试描述之前的一些想法和为什么这些想法被摒弃。
 
 A "live ring" option was considered where each server could maintain its own
 copy of the ring and the servers would use a gossip protocol to communicate the
@@ -255,11 +270,11 @@ before it's shipped out to the servers, and guarantees each server is using a
 ring from the same timeline. It also means that the servers themselves aren't
 spending a lot of resources maintaining rings.
 
-我们曾考虑过一个“live ring”的方案，此方案中服务器会维护环的服务器自己的副本，
-并且服务器会通过gossip协议来沟通他们制造的改变。这个方案被摒弃是因为它是在太复杂，
-并且对有效的项目时间来说，它比当前的代码更容易出错。一个bug可能很容易地通过gossip将坏数据传动到集群的全局，
-并且很难再恢复。从外部管理环使进程大为简化，它在全面确认数据的正确性之后才封发到服务器，
-并且保证每一个服务器都使用源自同一个时间线的服务器。这也意味着服务器不用自己花费很多资源来维护环。
+我们曾考虑过一个“live ring”的方案，此方案中服务器会维护环的服务器自己的副本，并且服务器会通过
+gossip协议来沟通他们制造的改变。这个方案被摒弃是因为它实在太复杂，并且对有效的项目时间来说，它
+比当前的代码更容易出错。一个bug可能很容易地通过gossip将坏数据传动到集群的全局，并且很难再恢复。
+从外部管理环使进程大为简化，它在全面确认数据的正确性之后才封发到服务器，并且保证每一个服务器都使
+用源自同一个时间线的服务器。这也意味着服务器不用自己花费很多资源来维护环。
 
 
 A couple of "ring server" options were considered. One was where all ring
@@ -273,10 +288,10 @@ of quick automatic ring changes did mean that other parts of the system had to
 be coded to handle devices being unavailable for a period of hours until
 someone could manually update the ring.
 
-也曾考虑过两个“ring server”的方案。一个方案是从别的某个或某些服务器向此服务器查询环，
-但是此方案也被摒弃，是因为也会导致复杂和混乱。另一个方案与当前的实现比较类似，
-但是别的服务器可以将提交改变的请求给环服务器以请求创建一个新环并回馈给服务器。这个方案
-被抛弃是因为项目时间很有限，并且当前环的变更还是极少的以至于手工控制已经完全足够。
+也曾考虑过两个“ring server”的方案。一个方案是从别的某个或某些服务器向此服务器查询环，但是此方案
+也被摒弃，是因为也会导致复杂和混乱。另一个方案与当前的实现比较类似，但是别的服务器可以将提交改变的
+请求给环服务器以请求创建一个新环并回馈给服务器。这个方案被抛弃是因为项目时间很有限，并且当前环的变
+更还是极少的以至于手工控制已经完全足够。
 
 The current ring process has each replica of a partition independently assigned
 to a device. A version of the ring that used a third of the memory was tried,
@@ -288,11 +303,11 @@ moving only one partition replica within a given time window (except due to
 device failures). Using the additional memory was deemed a good tradeoff for
 moving data around the cluster much less often.
 
-当前环的实现会将一个分区的每个副本独立地赋给存储设备。曾尝试过一个使用三分之一内存的环，
-此方案中第一个分区的副本会被直接赋给，而另外两个则通过对环进行寻访直找到一个位于其他区域的存储设备。
-此方案被抛弃是因为当一个分区立马发生移动时，分区副本的数量将失去控制。保持每个副本的独立性可以允许
-在一个给定的时间窗口中只有一个分区副本会被移动（除非出现存储设备错误）。使用额外的内存被认为是一个
-可以减少在集群中移动数据频率的很好的权衡。
+当前环的实现会将一个分区的每个副本独立地赋给存储设备。曾尝试过一个使用三分之一内存的环，此方案中第
+一个分区的副本会被直接赋给，而另外两个则通过对环进行寻访直找到一个位于其他区域的存储设备。此方案被
+抛弃是因为当一个分区立马发生移动时，分区副本的数量将失去控制。保持每个副本的独立性可以允许在一个给
+定的时间窗口中只有一个分区副本会被移动（除非出现存储设备错误）。使用额外的内存被认为是一个可以减少
+在集群中移动数据频率的很好的权衡。
 
 Another ring design was tried where the partition to device assignments weren't
 stored in a big list in memory but instead each device was assigned a set of
@@ -303,11 +318,10 @@ a lot of anchors and walking through those anchors to find replicas started to
 add up. In the end, the memory savings wasn't that great and more processing
 power was used, so the idea was discarded.
 
-另一个环的设计师尝试不将存储设备对应的分区地址存储在一个位于内存的大列表中，
-而是每一个存储设备会被赋予一组哈希，或者锚。分区会从数据条目自己的哈希和最近的
-存储设备的锚来确定将将副本存于何处。然而，要得到一个可回复的分布式数据，
-每一个存储设备都必须保有大量的锚并且遍历这些锚以查到副本。最终，
-内存保存不是非常好并且更多的处理能力被消耗，因此此方案也被摒弃。
+另一个环的设计是尝试不将存储设备对应的分区地址存储在一个位于内存的大列表中，而是每一个存储设备会被
+赋予一组哈希，或者锚。分区会从数据条目自己的哈希和最近的存储设备的锚来确定将将副本存于何处。然而，
+要得到一个可回复的分布式数据，每一个存储设备都必须保有大量的锚并且遍历这些锚以查到副本。最终，内存
+保存不是非常好并且更多的处理能力被消耗，因此此方案也被摒弃。
 
 A completely non-partitioned ring was also tried but discarded as the
 partitioning helps many other parts of the system, especially replication.
@@ -316,9 +330,9 @@ replicas rather than each data item independently attempted and retried. Hashes
 of directory structures can be calculated and compared with other replicas to
 reduce directory walking and network traffic.
 
-也曾尝试一个没有分区的环，但是因为分区也将服务于本系统的其它部分特别是复制器而不能去掉，
-所以此方案也被放弃。复制操作可以以分区为单位来尝试或重试，这好过独立地针对每一份数据条目进行操作。
-目录结构的哈希可以被计算及与其它副本比较来减少目录遍历操作和网络负担。
+也曾尝试一个没有分区的环，但是因为分区也将服务于本系统的其它部分特别是复制器而不能去掉，所以此方案
+也被放弃。复制操作可以以分区为单位来尝试或重试，这好过独立地针对每一份数据条目进行操作。目录结构的
+哈希可以被计算及与其它副本比较来减少目录遍历操作和网络负担。
 
 Partitioning and independently assigning partition replicas also allowed for
 the best balanced cluster. The best of the other strategies tended to give
@@ -326,8 +340,9 @@ the best balanced cluster. The best of the other strategies tended to give
 devices of varying weights. The current strategy allows us to get +-3% and +-8%
 respectively.
 
-分区实现和独立地赋予分区副本，这样可以最优化集群的负载均衡。其他策略中最优秀的那个也仅仅可以实现对权重平均的存储设备达到上下10%的波动，
-对权重差异巨大的存储设备达到15%上下的波动。而目前的策略可以使我们在前述两种状况中分别达到上下3%和上下8%。
+分区实现和独立地赋予分区副本，这样可以最优化集群的负载均衡。其他策略中最优秀的那个也仅仅可以实现对
+权重平均的存储设备达到上下10%的波动，对权重差异巨大的存储设备达到15%上下的波动。而目前的策略可以
+使我们在前述两种状况中分别达到上下3%和上下8%。
 
 Various hashing algorithms were tried. SHA offers better security, but the ring
 doesn't need to be cryptographically secure and SHA is slower. Murmur was much
@@ -337,5 +352,6 @@ be maintaining the rings themselves anyway and only doing hash lookups, MD5 was
 chosen for its general availability, good distribution, and adequate speed.
 
 我们尝试过各种不同的哈希算法。SHA提供了更好的安全，但是环不需要密码级别的安全，并且SHA速度也很慢。
-Murmer快多了，但是MD5是内建的，并且哈希计算只花费所有请求处理时间的极小一部分。总之，一单哈希被确定，
-服务器就不会再自己维护那些环，而仅仅进行哈希查找，MD5被选择是因为它总体上的有效性，很好的分布性，和足够的速度。
+Murmer快多了，但是MD5是内建的，并且哈希计算只花费所有请求处理时间的极小一部分。总之，一单哈希被确
+定，服务器就不会再自己维护那些环，而仅仅进行哈希查找，MD5被选择是因为它总体上的有效性，很好的分布性，
+和足够的速度。

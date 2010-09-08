@@ -13,20 +13,23 @@ architecture. For each request, it will look up the location of the account,
 container, or object in the ring (see below) and route the request accordingly.
 The public API is also exposed through the Proxy Server.
 
-Proxy Server负责将Swift架构的其他部分绑定在一起。对每一个请求，Proxy Server都要在环中查找account,container,或者object的位置，
-并且将请求转送到对应的地方。公开的API也是通过Proxy Server暴露出来。
+Proxy Server负责将Swift架构的其他部分绑定在一起。对每一个请求，Proxy Server都要在环中查找
+account,container,或者object的位置，并且将请求转送到对应的地方。公开的API也是通过
+Proxy Server暴露出来。
 
 A large number of failures are also handled in the Proxy Server. For
 example, if a server is unavailable for an object PUT, it will ask the
 ring for a handoff server and route there instead.
 
-大量的失败也是由Proxy Server处理的。比如，如果一个server无法对一个object的PUT操作进行相应，它将从环中查询一个可以接手的server并将请求转递给它。
+大量的失败也是由Proxy Server处理的。比如，如果一个server无法对一个object的PUT操作进行相应，
+它将从环中查询一个可以接手的server并将请求转递给它。
 
 When objects are streamed to or from an object server, they are streamed
-directly through the proxy server to of from the user -- the proxy server
+directly through the proxy server to or from the user -- the proxy server
 does not spool them.
 
-当objects被传送object server或者从object server下载，他们将被直接通过proxy server传送----proxy server不回对他们进行“假脱机”。
+当objects被传送object server或者从object server下载，他们将被直接通过proxy server传送
+----proxy server不回对他们进行“假脱机”“代理？”。
 
 --------
 The Ring
@@ -38,8 +41,9 @@ objects. When other components need to perform any operation on an object,
 container, or account, they need to interact with the appropriate ring to
 determine its location in the cluster.
 
-环代表磁盘上所存储的实体的名称与他们物理位置之间的映射。它们是分别对应于accounts,containers和objects的环。
-当其它的组件需要对object,container或者account执行某个操作时，它们需要通过与对应的环沟通来确定执行客体在集群中的位置。
+环代表磁盘上所存储的实体的名称与他们物理位置之间的映射。它们是分别对应于accounts,containers
+和objects的环。当其它的组件需要对object,container或者account执行某个操作时，它们需要通过
+与对应的环沟通来确定执行客体在集群中的位置。
 
 The Ring maintains this mapping using zones, devices, partitions, and replicas.
 Each partition in the ring is replicated, by default, 3 times accross the
@@ -48,15 +52,15 @@ by the ring. The ring is also responsible for determining which devices are
 used for handoff in failure scenarios.
 
 环通过zones（区域）,devices（存储）,partitions（分区）和replicas（副本）来维护这些映射。
-环中的每个分区都会被在集群中（还是集群间？）备份（默认3份），并且每个分区的位置信息将存储在环所维护的映射中。
-环同时也负责确定由哪个device（存储）来接手那些失败的操作。
+环中的每个partition都会被在集群中（还是集群间？）备份（默认3份），并且每个partition的位置
+信息将存储在环所维护的映射中。环同时也负责确定由哪个device（存储）来接手那些失败的操作。
 
 Data can be isolated with the concept of zones in the ring. Each replica
 of a partition is guaranteed to reside in a different zone. A zone could
 represent a drive, a server, a cabinet, a switch, or even a datacenter.
 
-数据可以通过环中的区域这个概念来实现隔离。每个分区的备份都会被保证存储在不同的区域中.
-一个区域可以代表一个存储,一个服务器,一个机柜，一个交换机，甚至一个数据中心。
+数据可以通过环中的zone这个概念来实现隔离。每个partition的备份都会被保证存储在不同的zone中.
+一个zone可以代表一个存储器,一个服务器,一个机柜，一个交换机，甚至一个数据中心。
 
 The partitions of the ring are equally divided among all the devices in the
 Swift installation. When partitions need to be moved around (for example if a
@@ -64,14 +68,15 @@ device is added to the cluster), the ring ensures that a minimum number of
 partitions are moved at a time, and only one replica of a partition is moved at
 a time.
 
-环的分区是对swift装置中所有存储设备的平均划分来确定的。当分区需要被移动（比如，一个新的存储设备加入此集群），
-环将确保每次只有最小数量的分区会被移动，并且每次只有一个分区的备份会被移动。
+环的partitions是对swift装置中所有存储设备的平均划分来确定的。当分区需要被移动（比如，一个新的
+存储设备加入此集群），环将确保每次只有最小数量的分区会被移动，并且每次只有一个分区的备份会被移动。
 
 Weights can be used to balance the distribution of partitions on drives
 across the cluster. This can be useful, for example, when different sized
 drives are used in a cluster.
 
-权重可以用来均衡存储设备上的分区在集群间的分布。这是非常有用的，比如，当大小不同的存储设备被使用在同一集群中时。
+权重可以用来均衡存储设备上的partitions在集群间的分布。这是非常有用的，比如，当大小不同的存储设
+备被使用在同一集群中时。
 
 The ring is used by the Proxy server and several background processes
 (like replication).
