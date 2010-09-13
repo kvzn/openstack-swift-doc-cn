@@ -1,0 +1,316 @@
+=====================
+Administrator's Guide
+=====================
+
+------------------
+Managing the Rings
+维护环
+------------------
+
+Removing a device from the ring::
+从环中删除一个设备：
+
+    swift-ring-builder <builder-file> remove <ip_address>/<device_name>
+    
+Removing a server from the ring::
+从环中删除一个服务器
+
+    swift-ring-builder <builder-file> remove <ip_address>
+    
+Adding devices to the ring:
+向环中添加设备：
+
+See :ref:`ring-preparing`
+    
+See what devices for a server are in the ring::
+查看环中的一个服务器拥有哪些设备：
+
+    swift-ring-builder <builder-file> search <ip_address>
+
+Once you are done with all changes to the ring, the changes need to be
+"committed"::
+一旦你确认了对环所有的更改，你需要对更改进行确认：
+
+    swift-ring-builder <builder-file> rebalance
+    
+Once the new rings are built, they should be pushed out to all the servers
+in the cluster.
+一旦新的环被创建，他们需要被推送到集群中所有的服务器。
+-----------------------
+Handling System Updates
+处理系统更新
+-----------------------
+
+It is recommended that system updates and reboots are done a zone at a time.
+This allows the update to happen, and for the Swift cluster to stay available
+and responsive to requests.  It is also advisable when updating a zone, let
+it run for a while before updating the other zones to make sure the update
+doesn't have any adverse effects.
+建议每次都以一个zone为单位进行系统更新和重启。以这种方式进行更新，能使Swift集群保持可使用和可
+响应的状态。另一个更新zone的明智的做法是，更新完一个zone时，先让其运行一段时间以保证之前的更新
+没有导致不利的反应，然后再进行下次更新。
+
+----------------------
+Handling Drive Failure
+处理磁盘错误
+----------------------
+
+In the event that a drive has failed, the first step is to make sure the drive
+is unmounted.  This will make it easier for swift to work around the failure
+until it has been resolved.  If the drive is going to be replaced immediately,
+then it is just best to replace the drive, format it, remount it, and let
+replication fill it up.
+当一个磁盘出现错误，第一步要先确保将此盘解挂。这可使swift更容易地应对此错误，直至问题最终被解决。
+如果此磁盘可被立刻替换，最好替换此磁盘，格式化，重新挂载，然后让副本写入其中。
+
+If the drive can't be replaced immediately, then it is best to leave it
+unmounted, and remove the drive from the ring. This will allow all the
+replicas that were on that drive to be replicated elsewhere until the drive
+is replaced.  Once the drive is replaced, it can be re-added to the ring.
+如果磁盘不能被立即替换，最好让此磁盘保持解挂状态，然后从环中删除此磁盘。这可使此磁盘上的所有副本
+被移动到别的磁盘上，直至此磁盘被更换。一旦磁盘被更换，它可以被重新添加到环中。
+
+-----------------------
+Handling Server Failure
+处理服务器错误
+-----------------------
+
+If a server is having hardware issues, it is a good idea to make sure the 
+swift services are not running.  This will allow Swift to work around the
+failure while you troubleshoot.
+如果一台服务器出现硬件故障，最好先确保swift服务都已停止。这可使Swift能在你排错时很好地应对此
+错误。
+
+If the server just needs a reboot, or a small amount of work that should
+only last a couple of hours, then it is probably best to let Swift work
+around the failure and get the machine fixed and back online.  When the
+machine comes back online, replication will make sure that anything that is
+missing during the downtime will get updated.
+如果服务器仅仅需要一次重启，或者持续几个小时的低负荷工作，大概最好的方法是使Swift解除故障然后
+重新上线。一旦机器重新上线，复制器将确保在宕机这段时间中对视的所有东西都被更新。
+
+If the server has more serious issues, then it is probably best to remove
+all of the server's devices from the ring.  Once the server has been repaired
+and is back online, the server's devices can be added back into the ring.
+It is important that the devices are reformatted before putting them back
+into the ring as it is likely to be responsible for a different set of
+partitions than before.
+如果服务器有更多的错误，那么大概最好的方式是将此服务器所有的devices都从环中移除。一旦服务器被
+修复并重新上线，服务器的devices可悲重新加入环中。很重要的一点是，一旦一个服务器的devices被作
+为可响应的与之前不同的新的分区被添加到环中，应事先将它们重新格式化。
+
+-----------------------
+Detecting Failed Drives
+检测出错的此哦安
+-----------------------
+
+It has been our experience that when a drive is about to fail, error messages
+will spew into `/var/log/kern.log`.  There is a script called
+`swift-drive-audit` that can be run via cron to watch for bad drives.  If 
+errors are detected, it will unmount the bad drive, so that Swift can
+work around it.  The script takes a configuration file with the following
+settings:
+我们已有的一个经验是当一个磁盘将要出错，会有一些error信息被写入`/var/log/kern.log`。有一个
+叫`swift-drive-audit`的脚本可以经由cron来查找出错的磁盘。如果错误被检测出来，那么出错的磁盘
+将被解挂，这样使Swift可以很好地应对。此脚本需要一个有如下内容的配置文件：
+
+[drive-audit]
+
+==================  ==========  ===========================================
+Option              Default     Description
+------------------  ----------  -------------------------------------------
+log_facility        LOG_LOCAL0  Syslog log facility
+log_level           INFO        Log level
+device_dir          /srv/node   Directory devices are mounted under
+minutes             60          Number of minutes to look back in
+                                `/var/log/kern.log`
+error_limit         1           Number of errors to find before a device
+                                is unmounted
+==================  ==========  ===========================================
+
+This script has only been tested on Ubuntu 10.04, so if you are using a
+different distro or OS, some care should be taken before using in production.
+这个脚本只在Ubuntu 10.04中测试过，因此如果你在使用一个不同的发新版本，或者不同的操作系统，
+在产品化使用之前你要多加小心。
+
+--------------
+Cluster Health
+集群健康
+--------------
+
+There is a swift-stats-report tool for measuring overall cluster health. This
+is accomplished by checking if a set of deliberately distributed containers and
+objects are currently in their proper places within the cluster.
+有一个swift-stats-report工具可用来检测集群全局的健康状况。它通过检测一些特意分布的containers
+和objects是否处于其应然的位置来判断集群的健康情况。
+
+For instance, a common deployment has three replicas of each object. The health
+of that object can be measured by checking if each replica is in its proper
+place. If only 2 of the 3 is in place the object's heath can be said to be at
+66.66%, where 100% would be perfect.
+举个例子，一个普通的为每个object保有3个副本的部署。此object的健康情况可以通过检测每个副本是否都
+处于应然的位置来得到。如果3个中只有2个处于正确的位置，那么object的健康度可认为是6666%，完美的情
+况是100%。
+
+A single object's health, especially an older object, usually reflects the
+health of that entire partition the object is in. If we make enough objects on
+a distinct percentage of the partitions in the cluster, we can get a pretty
+valid estimate of the overall cluster health. In practice, about 1% partition
+coverage seems to balance well between accuracy and the amount of time it takes
+to gather results.
+单个object的健康度，尤其一个较老的object的健康度，通常反应出object所在分区的全局健康状况，我们
+可以得到集群全局健康状况的有效估计。实践中，大约1%的分区覆盖，仿佛能够很好地平衡检测的准确性和得到
+结果所花费的时间。
+
+The first thing that needs to be done to provide this health value is create a
+new account solely for this usage. Next, we need to place the containers and
+objects throughout the system so that they are on distinct partitions. The
+swift-stats-populate tool does this by making up random container and object
+names until they fall on distinct partitions. Last, and repeatedly for the life
+of the cluster, we need to run the swift-stats-report tool to check the health
+of each of these containers and objects.
+首要的事情是为健康检测提供一个独立的新的帐号。其次，我们需要将containers和objects在系统中均匀
+分布以使它们有极高的分布性。swift-stats-populate工具通过创建随机的container和object名直到
+它们处于分布的分区中。最后，在集群的全部生命周期中，需要反复重复的是通过运行swift-stats-report
+来检查前面创建的那些containers和obejcts的健康情况。
+
+These tools need direct access to the entire cluster and to the ring files
+(installing them on an auth server or a proxy server will probably do). Both
+swift-stats-populate and swift-stats-report use the same configuration file,
+/etc/swift/stats.conf. Example conf file::
+这些工具需要被与全局集群和环文件直接相连(将它们安装到一个auth服务器或一个proxy服务器即可)。
+swift-stats-populate和swift-stats-report都使用同样的配置文件/etc/swift/stats.conf.
+示例如：
+
+    [stats]
+    auth_url = http://saio:11000/v1.0
+    auth_user = test:tester
+    auth_key = testing
+
+There are also options for the conf file for specifying the dispersion coverage
+(defaults to 1%), retries, concurrency, CSV output file, etc. though usually
+the defaults are fine.
+也有一些可以指定分布范围，重试，并发数量，CSV输出文件等的配置选项。通常使用默认的即可。
+
+Once the configuration is in place, run `swift-stats-populate -d` to populate
+the containers and objects throughout the cluster.
+一旦配置文件就位了，运行`swift-stats-populate -d`就可以在集群中分布containers和objects。
+
+Now that those containers and objects are in place, you can run
+`swift-stats-report -d` to get a dispersion report, or the overall health of
+the cluster. Here is an example of a cluster in perfect health::
+一旦这些contaienrs和objects都已就位，你可以运行 `swift-stats-report -d`来得到一个散布的
+报告，或者集群全局的健康信息。这儿有一个集群健康状况极好的示例：
+
+    $ swift-stats-report -d
+    Queried 2621 containers for dispersion reporting, 19s, 0 retries
+    100.00% of container copies found (7863 of 7863)
+    Sample represents 1.00% of the container partition space
+    
+    Queried 2619 objects for dispersion reporting, 7s, 0 retries
+    100.00% of object copies found (7857 of 7857)
+    Sample represents 1.00% of the object partition space
+
+Now I'll deliberately double the weight of a device in the object ring (with
+replication turned off) and rerun the dispersion report to show what impact
+that has::
+现在我将慎重地将一个设备在object环(复制器关闭)中的权重加倍，并且得到散布的报告以反应这样做的影响：
+
+    $ swift-ring-builder object.builder set_weight d0 200
+    $ swift-ring-builder object.builder rebalance
+    ...
+    $ swift-stats-report -d
+    Queried 2621 containers for dispersion reporting, 8s, 0 retries
+    100.00% of container copies found (7863 of 7863)
+    Sample represents 1.00% of the container partition space
+    
+    Queried 2619 objects for dispersion reporting, 7s, 0 retries
+    There were 1763 partitions missing one copy.
+    77.56% of object copies found (6094 of 7857)
+    Sample represents 1.00% of the object partition space
+
+You can see the health of the objects in the cluster has gone down
+significantly. Of course, I only have four devices in this test environment, in
+a production environment with many many devices the impact of one device change
+is much less. Next, I'll run the replicators to get everything put back into
+place and then rerun the dispersion report::
+你可以看到集群中objects的健康度已经大幅下降。当然，在此测试环境中我只使用了4太设备，在生产环境中
+使用多得多的设备时，一个设备的影响会小很多。然后，我将运行复制器以将所有的东西重新放回去然后得到散
+布的报告：
+
+    ... start object replicators and monitor logs until they're caught up ...
+    $ swift-stats-report -d
+    Queried 2621 containers for dispersion reporting, 17s, 0 retries
+    100.00% of container copies found (7863 of 7863)
+    Sample represents 1.00% of the container partition space
+
+    Queried 2619 objects for dispersion reporting, 7s, 0 retries
+    100.00% of object copies found (7857 of 7857)
+    Sample represents 1.00% of the object partition space
+
+So that's a summation of how to use swift-stats-report to monitor the health of
+a cluster. There are a few other things it can do, such as performance
+monitoring, but those are currently in their infancy and little used. For
+instance, you can run `swift-stats-populate -p` and `swift-stats-report -p` to
+get performance timings (warning: the initial populate takes a while). These
+timings are dumped into a CSV file (/etc/swift/stats.csv by default) and can
+then be graphed to see how cluster performance is trending.
+这是一个如何使用swift-stats-report来监测集群健康状况的综合。它还可以做些其它的，比如履行监测，
+你可以运行`swift-stats-populate -p`和`swift-stats-report -p`来得到监测时间轴（警告：
+初始的操作需要一些时间）。这些时间轴信息被输出到一个CSV文件(默认是/etc/swift/stats.csv)，
+可以被绘图以分析集群运行的情况。
+
+------------------------
+Debugging Tips and Tools
+排错提示和工具
+------------------------
+
+When a request is made to Swift, it is given a unique transaction id.  This
+id should be in every log line that has to do with that request.  This can
+be usefult when looking at all the services that are hit by a single request.
+当一个request发送给Swift,此request会得到一个唯一的事务ID.所有日志中与处理此request相关的
+所有行目中都会包含此ID.这在查找某一request所引发问题的所有服务时会非常有用。
+
+If you need to know where a specific account, container or object is in the
+cluster, `swift-get-nodes` will show the location where each replica should be.
+如果你想知道指定account,container和object在集群中的位置，`swift-get-nodes`可以得到所有
+副本的位置。
+
+If you are looking at an object on the server and need more info,
+`swift-object-info` will display the account, container, replica locations
+and metadata of the object.
+如果你在查询服务器上的一个object并且需要得到更多信息，`swift-object-info`将可以显示此object
+的account,container,副本位置和元数据。
+
+If you want to audit the data for an account, `swift-account-audit` can be
+used to crawl the account, checking that all containers and objects can be
+found.
+如果你想审计一个account的数据，`swift-account-audit`可用来扫描此account的所有数据，
+并检查所有可以找到的contaienrs和objects。
+
+-----------------
+Managing Services
+管理服务
+-----------------
+
+Swift services are generally managed with `swift-init`. the general usage is
+``swift-init <service> <command>``, where service is the swift service to 
+manage (for example object, container, account, proxy) and command is one of:
+Swift服务一般是用`swift-init`来管理的。通常的用法是``swift-init <service> <command>``,
+其中的services是指swift的服务（比如object, container, account, proxy）:
+
+==========  ===============================================
+Command     Description
+----------  -----------------------------------------------
+start       Start the service
+stop        Stop the service
+restart     Restart the service
+shutdown    Attempt to gracefully shutdown the service
+reload      Attempt to gracefully restart the service
+==========  ===============================================
+
+A graceful shutdown or reload will finish any current requests before 
+completely stopping the old service.  There is also a special case of 
+`swift-init all <command>`, which will run the command for all swift services.
+优雅的关闭和重新加载的方式是在彻底关闭所有既有service之前，将所有目前的requests先处理完毕。
+这也是`swift-init all <command>`的一个特殊情况，针对所有swift服务执行命令的情况。

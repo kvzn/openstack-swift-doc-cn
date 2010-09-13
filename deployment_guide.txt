@@ -12,8 +12,9 @@ drives and 8 cores of processing power. RAID on the storage drives is not
 required and not recommended. Swift's disk usage pattern is the worst
 case possible for RAID, and performance degrades very quickly using RAID 5
 or 6.
-Swift被设计运行于商用硬件之上。在Rackspace, 我们的存储服务器目前都是有24个2t SATA硬盘和8核处理器的4U服务器。
-不需要也不推荐使用RAID硬盘。Swift的硬盘使用方式对RAID盘来说是最不适合的，而且对RAID 6和6,会出现性能的急剧下降。
+Swift被设计运行于商用硬件之上。在Rackspace, 我们的存储服务器目前都是有24个2t SATA硬盘和
+8核处理器的4U服务器。不需要也不推荐使用RAID硬盘。Swift的硬盘使用方式对RAID盘来说是最不适合的，
+而且对RAID 6和6,会出现性能的急剧下降。
 ------------------
 Deployment Options部署选项
 ------------------
@@ -32,7 +33,8 @@ The Proxy Services are more CPU and network I/O intensive. If you are using
 10g networking to the proxy, or are terminating SSL traffic at the proxy,
 greater CPU power will be required.
 
-Proxy服务是CPU和网络I/O密集型。如果你给Proxy提供10网络，或者打算结束SSL阻塞的问题，你需要更强悍的CPU。
+Proxy服务是CPU和网络I/O密集型。如果你给Proxy提供10网络，或者打算结束SSL阻塞的问题，你需要更
+强悍的CPU。
 
 The Object, Container, and Account Services (Storage Services) are more disk
 and network I/O intensive.
@@ -42,7 +44,8 @@ Object，Container和Account服务则需要更多的存储空间，同时也是�
 The easiest deployment is to install all services on each server. There is
 nothing wrong with doing this, as it scales each service out horizontally.
 
-最容易的部署方案是将以上所有的服务都安装到每台服务器。这样做没有什么不对的，因为这样可以水平地扩展每个服务。
+最容易的部署方案是将以上所有的服务都安装到每台服务器。这样做没有什么不对的，因为这样可以水平地扩展
+每个服务。
 
 At Rackspace, we put the Proxy Services on their own servers and all of the
 Storage Services on the same server. This allows us to send 10g networking to
@@ -51,9 +54,9 @@ proxies more manageable.  Storage Services scale out horizontally as storage
 servers are added, and we can scale overall API throughput by adding more
 Proxies.
 
-在Rackspace,我们将Proxy Services以及另外3个存储服务都部署在每台服务器上。这样可以使我们分配10G的带宽给Proxy,
-分配1G给存储服务器，同时在所有代理服务间保持更可控的负载均衡。当当存储服务器增加时，存储服务就会水平扩展，
-并且我们可以通过增加Proxies来拓展接口吞吐。
+在Rackspace,我们将Proxy Services以及另外3个存储服务都部署在每台服务器上。这样可以使我们分配
+10G的带宽给Proxy,分配1G给存储服务器，同时在所有代理服务间保持更可控的负载均衡。当当存储服务器增
+加时，存储服务就会水平扩展，并且我们可以通过增加Proxies来拓展接口吞吐。
 
 If you need more throughput to either Account or Container Services, they may
 each be deployed to their own servers. For example you might use faster (but
@@ -66,7 +69,8 @@ Load balancing and network design is left as an excercise to the reader,
 but this is a very important part of the cluster, so time should be spent
 designing the network for a Swift cluster.
 
-负载均衡和网络设计就作为给读者留下的练习吧，但是它们也是非常重要的部分，因此你极有必要花费一些时间在此问题上。
+负载均衡和网络设计就作为给读者留下的练习吧，但是它们也是非常重要的部分，因此你极有必要花费一些时间
+在此问题上。
 
 .. _ring-preparing:
 
@@ -87,7 +91,8 @@ For example, imagine we are building a cluster that will have no more than
 5,000 drives. That would mean that we would have a total number of 500,000
 partitions, which is pretty close to 2^19, rounded up.
 
-比如，想象我们正在构建一个将有多余5000个磁盘的集群。这将意味着我们应有500，000个分区，那最接近的2的幂就是2的19次方。
+比如，想象我们正在构建一个将有多余5000个磁盘的集群。这将意味着我们应有500，000个分区，那最接近
+的2的幂就是2的19次方。
 
 It is also a good idea to keep the number of partitions small (realatively).
 The more partitions there are, the more work that has to be done by the
@@ -95,16 +100,16 @@ replicators and other backend jobs and the more memory the rings consume in
 process. The goal is to find a good balance between small rings and maximum
 cluster size.
 
-将分区数量保持在一个小一点的值也是个很好的主意(比较而言)。
-分区数量越多，在复制和其它一些后台操作时就需要做更多的工作，环也将消耗更多的内存。
+将分区数量保持在一个小一点的值也是个很好的主意(比较而言)。分区数量越多，在复制和其它一些后台操作
+时就需要做更多的工作，环也将消耗更多的内存。
 
 The next step is to determine the number of replicas to store of the data.
 Currently it is recommended to use 3 (as this is the only value that has
 been tested). The higher the number, the more storage that is used but the
 less likely you are to lose data.
 
-第二个步骤是确定存储数据副本的数量。目前建议存3份(这也是目前唯一经过测试的值)。
-当副本数量越多时，就需要越多的存粗空间，越少时，数据丢失的可能就更大。
+第二个步骤是确定存储数据副本的数量。目前建议存3份(这也是目前唯一经过测试的值)。当副本数量越多时，
+就需要越多的存粗空间，越少时，数据丢失的可能就更大。
 
 It is also important to determine how many zones the cluster should have. It is
 recommended to start with a minimum of 5 zones. You can start with fewer, but
@@ -118,11 +123,11 @@ network connectivity. The zone concept is very abstract, so feel free to use
 it in whatever way best isolates your data from failure. Zones are referenced
 by number, beginning with 1.
 
-确定一个集群有几个zone也是非常重要的。建议一开始至少分5个区域。当然你可以一开始设置更少，但是我们的测试显示在错误发生时，
-最少5个区域的方案是最优的。我们也建议常识设置更多的区域并且将它们保持尽可能高的独立性。
-比如物理位置，能源状况和网络状况这些因素可以在分区时加入参考。比如在一个小集群中你可以以机柜位单位来分区，
-每一个机柜享有独立的供电和独立的网络连接。区域的概念是很抽象的，所以只要能使你的每份数据拥有更高的隔离性，那么请不要有任何顾虑地使用它。
-区域使用数字来引用，以1开始。
+确定一个集群有几个zone也是非常重要的。建议一开始至少分5个区域。当然你可以一开始设置更少，但是我们
+的测试显示在错误发生时，最少5个区域的方案是最优的。我们也建议常识设置更多的区域并且将它们保持尽可能
+高的独立性。比如物理位置，能源状况和网络状况这些因素可以在分区时加入参考。比如在一个小集群中你可以
+以机柜位单位来分区，每一个机柜享有独立的供电和独立的网络连接。区域的概念是很抽象的，所以只要能使你
+的每份数据拥有更高的隔离性，那么请不要有任何顾虑地使用它。区域使用数字来引用，以1开始。
 
 You can now start building the ring with::
 你现在可以通过一下命令来构建环
@@ -133,7 +138,8 @@ This will start the ring build process creating the <builder_file> with
 2^<part_power> partitions. <min_part_hours> is the time in hours before a
 specific partition can be moved in succession (24 is a good value for this).
 
-这将启动环构造进程来生成包含2^<part_power>个分区的builder_file。<min_part_hours>是指定分区可以被成功移动的间隔时间（最好是24小时）。
+这将启动环构造进程来生成包含2^<part_power>个分区的builder_file。<min_part_hours>是指定分区
+可以被成功移动的间隔时间（最好是24小时）。
 
 Devices can be added to the ring with::
 存储设备可以通过一下命令来添加到环中
@@ -150,10 +156,11 @@ determines how many partitions are put on the device relative to the rest of
 the devices in the cluster (a good starting point is 100.0 x TB on the drive).
 Add each device that will be initially in the cluster.
 
-这条命令会将存储设备添加到与前面创建的同名的那个builder_file的环文件中。<zone>是此设备所在的区域号码，
-<ip>是设备所在服务器的ip,<port>是对应的端口，<device_name>是存储设备在服务器中的设备名(比如sdb1),
-<meta>是可选的设备元数据字符串，<weight>是存储设备的浮点类型的权重，此权重与该设备比集群中其它设备得到的分区数量成正比
-(好的起点是设备都是100T的倍数）,以上将添加到集群中的设备初始化。
+这条命令会将存储设备添加到与前面创建的同名的那个builder_file的环文件中。<zone>是此设备所在的
+区域号码，<ip>是设备所在服务器的ip,<port>是对应的端口，<device_name>是存储设备在服务器中的
+设备名(比如sdb1),<meta>是可选的设备元数据字符串，<weight>是存储设备的浮点类型的权重，此权重
+与该设备比集群中其它设备得到的分区数量成正比(好的起点是设备都是100T的倍数）,以上将添加到集群中的
+设备初始化。
 
 
 Once all of the devices are added to the ring, run::
@@ -165,8 +172,8 @@ important whenever making changes to the ring to make all the changes
 required before running rebalance. This will ensure that the ring stays as
 balanced as possible, and as few partitions are moved as possible.
 
-这会使设备对应的分区均匀地分布在环上。在运行均衡命令之前就应该修改完毕所有需要的地方。
-这将确保环尽可能地均衡，和更少的分区会被移动。
+这会使设备对应的分区均匀地分布在环上。在运行均衡命令之前就应该修改完毕所有需要的地方。这将确保环
+尽可能地均衡，和更少的分区会被移动。
 
 The above process should be done to make a ring for each storage serivce
 (Account, Container and Object). The builder files will be needed in future
@@ -177,10 +184,10 @@ swift_ring_builder with no options will display help text with available
 commands and options. More information on how the ring works internally
 can be found in the :doc:`Ring Overview <overview_ring>`.
 
-以上操作需要对每个存储服务都执行一遍以生成对应的环。环的构建文件会在未来对环的修改时使用到，
-因此保存好且备份此文件至关重要。.tar.gz结尾的环文件应该被推送到集群中的所有服务器上。
-欲得到更多关于构建环的信息，不带参数地运行swift_ring会得到帮助文件。关于环内部是如何工作的更多信息，
-请参阅Ring Overview <overview_ring>文档。
+以上操作需要对每个存储服务都执行一遍以生成对应的环。环的构建文件会在未来对环的修改时使用到，因此
+保存好且备份此文件至关重要。.tar.gz结尾的环文件应该被推送到集群中的所有服务器上。欲得到更多关于
+构建环的信息，不带参数地运行swift_ring会得到帮助文件。关于环内部是如何工作的更多信息，请参阅
+Ring Overview <overview_ring>文档。
 
 ---------------------------
 Object Server Configuration对象服务器配置
@@ -496,8 +503,8 @@ in the `proxy-server.conf` should contain all memcached servers.
 
 好几个服务都依赖Memcached来缓存几种查找项，比如校验口令，以及container/account是否存在。
 Swift不对对象数据进行任何缓存。Memcached应该可以运行在任何有满足需求的RAM和CPU的服务器上。
-在Rackspace,我们将Memcached存储在Proxy Servers上。'proxy-server.conf'的'memcache_servers'配置选项
-需要包含所有的缓存服务器。
+在Rackspace,我们将Memcached存储在Proxy Servers上。
+'proxy-server.conf'的'memcache_servers'配置选项需要包含所有的缓存服务器。
 
 -----------
 System Time系统时间
@@ -511,9 +518,10 @@ it is a good idea for all the servers).  At Rackspace, we use NTP with a local
 NTP server to ensure that the system times are as close as possible.  This
 should also be monitored to ensure that the times do not vary too much.
 
-时间或许是相对而言的，但是它却是Swift中非常重要的一个因素！Swift使用时间戳来确定哪个才是对象的最新版本。
-将集群中的所有服务器的系统时间同步到最同步的状态非常重要(尤其是Proxy,但是最好将所有服务器的时间都同步)。
-在Rackspace,我们使用本地的一个NTP服务器来确保系统的时间尽可能地接近。这同样也应该被严密监视以确保系统时间相差不会太大。
+时间或许是相对而言的，但是它却是Swift中非常重要的一个因素！Swift使用时间戳来确定哪个才是对象的
+最新版本。将集群中的所有服务器的系统时间同步到最同步的状态非常重要(尤其是Proxy,但是最好将所有服
+务器的时间都同步)。在Rackspace,我们使用本地的一个NTP服务器来确保系统的时间尽可能地接近。这同样
+也应该被严密监视以确保系统时间相差不会太大。
 
 ----------------------
 General Service Tuning一般服务调节
@@ -526,8 +534,9 @@ to 2 times the number of cores available. If more than one service is
 sharing a server, then some experimentaiton may be needed to find the best
 balance.
 
-大多数的服务都支持一个或者多个并发的处理器。这使服务可以更大化地利用多核的性能。一个好的起点是将Proxy和存储服务器的
-并发水平设置位内核数量的两倍。如果有１个以上的服务在共享一个服务器，那需要做些具体的实验以找出最平衡的方式。
+大多数的服务都支持一个或者多个并发的处理器。这使服务可以更大化地利用多核的性能。一个好的起点是将
+Proxy和存储服务器的并发水平设置位内核数量的两倍。如果有１个以上的服务在共享一个服务器，那需要做
+些具体的实验以找出最平衡的方式。
 
 At Rackspace, our Proxy servers have dual quad core processors, giving us 8
 cores. Our testing has shown 16 workers to be a pretty good balance when
@@ -542,8 +551,8 @@ and Object servers with 8 workers each. Most of the background jobs are run
 at a concurrency of 1, with the exception of the replicators which are run at
 a concurrency of 2.
 
-我们的存储服务都运行在同样的服务器上：２＊４核，公８核。对Account,Container和对象服务我们均运行８个实例。
-多数的后台处理都运行一个并发的实例上，而复制器则运行２个并发的实例。
+我们的存储服务都运行在同样的服务器上：２＊４核，公８核。对Account,Container和对象服务我们均
+运行８个实例。多数的后台处理都运行一个并发的实例上，而复制器则运行２个并发的实例。
 
 The above configuration setting should be taken as suggestions and testing
 of configuration settings should be done to ensure best utilization of CPU,
@@ -560,8 +569,9 @@ thorough testing with our use cases and hardware configurations, XFS was
 the best all-around choice. If you decide to use a filesystem other than
 XFS, we highly recommend thorough testing.
 
-Swift被设计可适用大多数的文件系统－－－唯一的要求是该文件系统必须支持扩展属性(xattrs)。
-我们的使用案例和硬件配置的测试显示，XFS 是综合性能最优的。如果你决定使用其它的文件系统，我们强烈建议进行测试。
+Swift被设计可适用大多数的文件系统－－－唯一的要求是该文件系统必须支持扩展属性(xattrs)。我们的
+使用案例和硬件配置的测试显示，XFS 是综合性能最优的。如果你决定使用其它的文件系统，我们强烈建议
+进行测试。
 
 If you are using XFS, some settings that can dramatically impact
 performance. We recommend the following when creating the partition::
@@ -579,10 +589,9 @@ RAID it is also important to make sure that the proper sunit and swidth
 settings get set so that XFS can make most efficient use of the RAID array.
 
 设置inode的size是非常重要的，因为XFS存储xattr数据在inode上。如果元数据太大而inode不足以容纳，
-那么一个扩展就会被创建，这会导致性能问题。将inode大小提升值1024bytes就可以提供足够空间以写入默认元数据，
-并增加一点headroom.我们不建议在RAID上运行Swift,如果你在使用RAID，那么确保合适的sunit和swidth配置也非常重要，
-这样XFS可以更有效使用RAID array。
-
+那么一个扩展就会被创建，这会导致性能问题。将inode大小提升值1024bytes就可以提供足够空间以写入默认
+元数据，并增加一点headroom.我们不建议在RAID上运行Swift,如果你在使用RAID，那么确保合适的sunit
+和swidth配置也非常重要，这样XFS可以更有效使用RAID array。
 
 We also recommend the following example mount options when using XFS::
 我们建议在使用XFS时以下列方式来mount:
@@ -604,7 +613,8 @@ General System Tuning一般系统调节
 Rackspace currently runs Swift on Ubuntu Server 10.04, and the following
 changes have been found to be useful for our use cases.
 
-Rackspace目前运行Swift在Ubuntu Server 10.04上，以下的一些修改已经被发现对我们的用例来说是非常有用的：
+Rackspace目前运行Swift在Ubuntu Server 10.04上，以下的一些修改已经被发现对我们的用例来说是
+非常有用的：
 
 The following settings should be in `/etc/sysctl.conf`::
 
@@ -630,8 +640,8 @@ in control of the network.  If you are not in control of the network, or
 do not expect high loads, then you may not want to adjust those values.
 
 修改TIME_WAIT时需要注意。操作系统默认情况下会保持一个６０秒的端口以确保任何包都可以被接收到。
-在高度使用中，并且在创建那么多数量的连接时，端口会很容易就被耗尽。我们可以改变这个因为我们控制了网络。
-如果你未能控制网络，或者不期望高的负载，你可能不想调节这些值。
+在高度使用中，并且在创建那么多数量的连接时，端口会很容易就被耗尽。我们可以改变这个因为我们控制
+了网络。如果你未能控制网络，或者不期望高的负载，你可能不想调节这些值。
 
 ----------------------
 Logging Considerations日志因素
