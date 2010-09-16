@@ -12,7 +12,7 @@ drives and 8 cores of processing power. RAID on the storage drives is not
 required and not recommended. Swift's disk usage pattern is the worst
 case possible for RAID, and performance degrades very quickly using RAID 5
 or 6.
-Swift被设计运行于商用硬件之上。在Rackspace, 我们的存储服务器目前都是有24个2t SATA硬盘和
+Swift被设计运行于商用硬件之上。在Rackspace, 我们的存储服务器目前都是有24个2T SATA硬盘和
 8核处理器的4U服务器。不需要也不推荐使用RAID硬盘。Swift的硬盘使用方式对RAID盘来说是最不适合的，
 而且对RAID 6和6,会出现性能的急剧下降。
 ------------------
@@ -22,7 +22,7 @@ Deployment Options部署选项
 The swift services run completely autonomously, which provides for a lot of
 flexibility when architecting the hardware deployment for swift. The 4 main
 services are:
-Swift的服务都是自动运行的，它们在架架设件来部署swift时提供极佳的灵活性。四项服务是：
+Swift的服务都是自动运行的，它们在部署swift时提供极佳的灵活性。四项服务是：
 
 #. Proxy Services
 #. Object Services
@@ -91,7 +91,7 @@ For example, imagine we are building a cluster that will have no more than
 5,000 drives. That would mean that we would have a total number of 500,000
 partitions, which is pretty close to 2^19, rounded up.
 
-比如，想象我们正在构建一个将有多余5000个磁盘的集群。这将意味着我们应有500，000个分区，那最接近
+比如，想象我们正在构建一个将有多于5000个磁盘的集群。这将意味着我们应有500，000个分区，那最接近
 的2的幂就是2的19次方。
 
 It is also a good idea to keep the number of partitions small (realatively).
@@ -126,7 +126,7 @@ by number, beginning with 1.
 确定一个集群有几个zone也是非常重要的。建议一开始至少分5个区域。当然你可以一开始设置更少，但是我们
 的测试显示在错误发生时，最少5个区域的方案是最优的。我们也建议常识设置更多的区域并且将它们保持尽可能
 高的独立性。比如物理位置，能源状况和网络状况这些因素可以在分区时加入参考。比如在一个小集群中你可以
-以机柜位单位来分区，每一个机柜享有独立的供电和独立的网络连接。区域的概念是很抽象的，所以只要能使你
+以机柜为单位来分区，每一个机柜享有独立的供电和独立的网络连接。区域的概念是很抽象的，所以只要能使你
 的每份数据拥有更高的隔离性，那么请不要有任何顾虑地使用它。区域使用数字来引用，以1开始。
 
 You can now start building the ring with::
@@ -157,11 +157,10 @@ the devices in the cluster (a good starting point is 100.0 x TB on the drive).
 Add each device that will be initially in the cluster.
 
 这条命令会将存储设备添加到与前面创建的同名的那个builder_file的环文件中。<zone>是此设备所在的
-区域号码，<ip>是设备所在服务器的ip,<port>是对应的端口，<device_name>是存储设备在服务器中的
-设备名(比如sdb1),<meta>是可选的设备元数据字符串，<weight>是存储设备的浮点类型的权重，此权重
-与该设备比集群中其它设备得到的分区数量成正比(好的起点是设备都是100T的倍数）,以上将添加到集群中的
-设备初始化。
-
+区域号码，<ip>是设备所在服务器的ip,<port>是对应的端口，<device_name>是设备在服务器中的设备
+名(比如sdb1),<meta>是可选的设备元数据字符串，<weight>是存储设备的浮点类型的权重，此权重与该
+设备比集群中其它设备得到的分区数量成正比(好的起点是设备都是100T的倍数）,以上将添加到集群中的设
+备初始化。
 
 Once all of the devices are added to the ring, run::
 一旦所有设备都添加到环上了，运行：
@@ -184,7 +183,7 @@ swift_ring_builder with no options will display help text with available
 commands and options. More information on how the ring works internally
 can be found in the :doc:`Ring Overview <overview_ring>`.
 
-以上操作需要对每个存储服务都执行一遍以生成对应的环。环的构建文件会在未来对环的修改时使用到，因此
+以上操作需要对每个存储服务都执行一遍以生成对应的环。环的构建文件会在未来对环的修改时时用到，因此
 保存好且备份此文件至关重要。.tar.gz结尾的环文件应该被推送到集群中的所有服务器上。欲得到更多关于
 构建环的信息，不带参数地运行swift_ring会得到帮助文件。关于环内部是如何工作的更多信息，请参阅
 Ring Overview <overview_ring>文档。
@@ -199,78 +198,116 @@ etc/object-server.conf-sample in the source code repository.
 etc/object-server.conf-sample是对象服务器的范本。
 
 The following configuration options are available:
+以下配置选项是有效的：
 
 [object-server]
+object服务器
 
 ==================  ==========  =============================================
 Option              Default     Description
 ------------------  ----------  ---------------------------------------------
 swift_dir           /etc/swift  Swift configuration directory
+								Swift配置文件目录
 devices             /srv/node   Parent directory of where devices are mounted
+								devices挂载点的父目录
 mount_check         true        Weather or not check if the devices are
                                 mounted to prevent accidently writing
                                 to the root device
+								是否检查devices被以防止偶然写入root设备的方式挂载
 bind_ip             0.0.0.0     IP Address for server to bind to
+								object server的IP
 bind_port           6000        Port for server to bind to
+								object server的端口
 workers             1           Number of workers to fork
+								启动几个工作实例
 log_facility        LOG_LOCAL0  Syslog log facility
+								日志记录设备
 log_level           INFO        Logging level
+								日志记录级别
 log_requests        True        Weather or not to log each request
+								是否对每个请求记录日志
 user                swift       User to run as
+								以何用户运行
 node_timeout        3           Request timeout to external services
+								外部服务的请求超时时间
 conn_timeout        0.5         Connection timeout to external services
+								外部服务的连接超时时间
 network_chunk_size  65536       Size of chunks to read/write over the
                                 network
+								网络读写块的大小
 disk_chunk_size     65536       Size of chunks to read/write to disk
+								磁盘读写块的大小
 max_upload_time     86400       Maximum time allowed to upload an object
+								允许上传object的最大时间。
 slow                0           If > 0, Minimum time in seconds for a PUT
                                 or DELETE request to complete
+								如果大于0，PUT或DELETE请求完成的最小时间（单位：秒）
 ==================  ==========  =============================================
 
 [object-replicator]
-
+object复制器
 ==================  ==========  ===========================================
 Option              Default     Description
 ------------------  ----------  -------------------------------------------
 log_facility        LOG_LOCAL0  Syslog log facility
+								系统日志记录设备
 log_level           INFO        Logging level
+								日志记录级别
 daemonize           yes         Weather or not to run replication as a
                                 daemon
+								是否以守护进程的形式运行复制进程
 run_pause           30          Time in seconds to wait between replication
                                 passes
+								复制进程过时的时间（单位：秒）
 concurrency         1           Number of replication workers to spawn
+								复制操作实例并发数量
 timeout             5           Timeout value sent to rsync --timeout and
                                 --contimeout options
+								发送给rsync超时时间
 stats_interval      3600        Interval in seconds between logging
                                 replication statistics
+								记录复制操作统计日志的间隔时间
 reclaim_age         604800      Time elapsed in seconds before an object
                                 can be reclaimed
+								object可被回收的时间
 ==================  ==========  ===========================================
 
 [object-updater]
-
+objecy更新器
 ==================  ==========  ===========================================
 Option              Default     Description
 ------------------  ----------  -------------------------------------------
 log_facility        LOG_LOCAL0  Syslog log facility
+								系统日志记录设备
 log_level           INFO        Logging level
+								日志记录级别
 interval            300         Minimum time for a pass to take
+								使上一次审计得以完成的最小时间间隔
 concurrency         1           Number of updater workers to spawn
+								更新器实例并发数量
 node_timeout        10          Request timeout to external services
+								外部服务请求超时时间
 conn_timeout        0.5         Connection timeout to external services
+								外部服务连接超时时间
 slowdown            0.01        Time in seconds to wait between objects
+								objects间等待时间
 ==================  ==========  ===========================================
 
 [object-auditor]
-
+object审计师
 ==================  ==========  ===========================================
 Option              Default     Description
 ------------------  ----------  -------------------------------------------
 log_facility        LOG_LOCAL0  Syslog log facility
+								系统日志记录设备
 log_level           INFO        Logging level
+								日志记录级别
 interval            1800        Minimum time for a pass to take
+								使上一次审计得以完成的最小时间间隔
 node_timeout        10          Request timeout to external services
+								外部服务请求超时时间
 conn_timeout        0.5         Connection timeout to external services
+								外部服务连接超时时间
 ==================  ==========  ===========================================
 
 ------------------------------
@@ -285,66 +322,99 @@ etc/container-server.conf-sample是容器服务器配置的范本。
 The following configuration options are available:
 
 [container-server]
-
+容器服务器
 ==================  ==========  ============================================
 Option              Default     Description
 ------------------  ----------  --------------------------------------------
 log_facility        LOG_LOCAL0  Syslog log facility
+								系统日志记录设备
 log_level           INFO        Logging level
+								日志记录级别
 swift_dir           /etc/swift  Swift configuration directory
-devices             /srv/node   Parent irectory of where devices are mounted
+								Swift配置文件目录
+devices             /srv/node   Parent directory of where devices are mounted
+								devices挂载点的父目录
 mount_check         true        Weather or not check if the devices are
                                 mounted to prevent accidently writing
                                 to the root device
+								是否检查devices是否以防止偶然写入root设备的方式挂载
 bind_ip             0.0.0.0     IP Address for server to bind to
+								container server的IP
 bind_port           6001        Port for server to bind to
+								container server的端口
 workers             1           Number of workers to fork
+								contaienr server的工作实例
 user                swift       User to run as
+								以何账户运行
 node_timeout        3           Request timeout to external services
+								外部服务请求超时时间
 conn_timeout        0.5         Connection timeout to external services
+								外部服务连接超时时间
 ==================  ==========  ============================================
 
 [container-replicator]
+container复制器
 
 ==================  ==========  ===========================================
 Option              Default     Description
 ------------------  ----------  -------------------------------------------
 log_facility        LOG_LOCAL0  Syslog log facility
+								系统日志记录设备
 log_level           INFO        Logging level
+								日志记录级别
 per_diff            1000
 concurrency         8           Number of replication workers to spawn
+								生成几个复制器工作实例
 run_pause           30          Time in seconds to wait between replication
                                 passes
+								复制进程过时的时间（单位：秒）
 node_timeout        10          Request timeout to external services
+								外部服务请求超时时间
 conn_timeout        0.5         Connection timeout to external services
+								外部服务连接超时时间
 reclaim_age         604800      Time elapsed in seconds before a container
                                 can be reclaimed
+								container可被回收的时间
 ==================  ==========  ===========================================
 
 [container-updater]
+container更新器
 
 ==================  ==========  ===========================================
 Option              Default     Description
 ------------------  ----------  -------------------------------------------
 log_facility        LOG_LOCAL0  Syslog log facility
+								系统日志记录设备
 log_level           INFO        Logging level
+								日志记录级别
 interval            300         Minimum time for a pass to take
+								使上一次审计得以完成的最小时间间隔
 concurrency         4           Number of updater workers to spawn
+								产生更新器工作实例的数量
 node_timeout        3           Request timeout to external services
+								外部服务请求超时时间
 conn_timeout        0.5         Connection timeout to external services
+								外部服务连接超时时间
 slowdown            0.01        Time in seconds to wait between containers
+								containers间等待时间
 ==================  ==========  ===========================================
 
 [container-auditor]
+container审计师
 
 ==================  ==========  ===========================================
 Option              Default     Description
 ------------------  ----------  -------------------------------------------
 log_facility        LOG_LOCAL0  Syslog log facility
+								系统日志记录设备
 log_level           INFO        Logging level
+								日志记录级别
 interval            1800        Minimum time for a pass to take
+								使上一次审计得以完成的最小时间间隔
 node_timeout        10          Request timeout to external services
+								外部服务请求超时时间
 conn_timeout        0.5         Connection timeout to external services
+								外部服务连接超时时间
 ==================  ==========  ===========================================
 
 ----------------------------
@@ -357,121 +427,176 @@ etc/account-server.conf-sample in the source code repository.
 etc/account-server.conf-sample是帐号服务器范本
 
 The following configuration options are available:
+以下配置选项是有效的
 
 [account-server]
-
+account服务器
 ==================  ==========  =============================================
 Option              Default     Description
 ------------------  ----------  ---------------------------------------------
 log_facility        LOG_LOCAL0  Syslog log facility
+								系统日志记录设备
 log_level           INFO        Logging level
+								日志记录级别
 swift_dir           /etc/swift  Swift configuration directory
+								Swift配置文件目录
 devices             /srv/node   Parent directory or where devices are mounted
+								devices挂载点的父目录
 mount_check         true        Weather or not check if the devices are
                                 mounted to prevent accidently writing
                                 to the root device
+								是否检查devices是否以防止偶然写入root设备的方式挂载
 bind_ip             0.0.0.0     IP Address for server to bind to
+								帐号服务器的IP
 bind_port           6002        Port for server to bind to
+								帐号服务器的端口
 workers             1           Number of workers to fork
+								帐号服务器工作实例的个数
 user                swift       User to run as
+								以何帐号运行
 ==================  ==========  =============================================
 
 [account-replicator]
+account复制器
 
 ==================  ==========  ===========================================
 Option              Default     Description
 ------------------  ----------  -------------------------------------------
 log_facility        LOG_LOCAL0  Syslog log facility
+								系统日志记录设备
 log_level           INFO        Logging level
+								日志记录级别
 per_diff            1000
 concurrency         8           Number of replication workers to spawn
+								复制器工作实例并发个数
 run_pause           30          Time in seconds to wait between replication
                                 passes
+								复制进程过时时间
 node_timeout        10          Request timeout to external services
+								外部服务请求超时时间
 conn_timeout        0.5         Connection timeout to external services
+								外部服务连接超时时间
 reclaim_age         604800      Time elapsed in seconds before a account
                                 can be reclaimed
+								account可被回收的时间
 ==================  ==========  ===========================================
 
 [account-auditor]
+account审计师
 
 ====================  ==========  ===========================================
 Option                Default     Description
 --------------------  ----------  -------------------------------------------
 log_facility          LOG_LOCAL0  Syslog log facility
+					  			  系统日志记录设备
 log_level             INFO        Logging level
+					  			  日志记录级别
 interval              1800        Minimum time for a pass to take
+					  			  使上一次审计得以完成的最小时间间隔
 max_container_count   100         Maximum containers randomly picked for
                                   a given account audit
+								  随机抽查每个account的最多containers个数
 node_timeout          10          Request timeout to external services
+					  			  外部服务请求超时时间
 conn_timeout          0.5         Connection timeout to external services
+					  			  外部服务连接超时时间
 ====================  ==========  ===========================================
 
 [account-reaper]
-
+account回收器
 ==================  ==========  ===========================================
 Option              Default     Description
 ------------------  ----------  -------------------------------------------
 log_facility        LOG_LOCAL0  Syslog log facility
+								系统日志记录设备
 log_level           INFO        Logging level
+								日志记录级别
 concurrency         25          Number of replication workers to spawn
+								回收期工作实例并发数量
 interval            3600        Minimum time for a pass to take
+								使上一次回收得以完成的最小时间间隔
 node_timeout        10          Request timeout to external services
+								外部服务请求超时时间
 conn_timeout        0.5         Connection timeout to external services
+								外部服务连接超时时间
 ==================  ==========  ===========================================
 
 --------------------------
-Proxy Server Configuration
+Proxy Server Configuration代理服务器配置
 --------------------------
 
 [proxy-server]
+代理服务器
 
 ============================  ===============  =============================
 Option                        Default          Description
 ----------------------------  ---------------  -----------------------------
 log_facility                  LOG_LOCAL0       Syslog log facility
+							  				   系统日志记录设备
 log_level                     INFO             Log level
+							  				   日志记录级别
 bind_ip                       0.0.0.0          IP Address for server to
                                                bind to
+											   服务器IP
 bind_port                     80               Port for server to bind to
-cert_file                                      Path to the ssl .crt 
+							  				   服务器端口
+cert_file                                      Path to the ssl .crt
+											   到ssl .crt的路径 
 key_file                                       Path to the ssl .key
+											   到ssl .key的路径
 swift_dir                     /etc/swift       Swift configuration directory
+							  				   Swift配置文件目录
 log_headers                   True             If True, log headers in each
                                                request
+											   如果为真，则记录每一个请求的头信息
 workers                       1                Number of workers to fork
+							  				   服务器工作实例的个数
 user                          swift            User to run as
+							  				   以何用户运行
 recheck_account_existence     60               Cache timeout in seconds to
                                                send memcached for account
                                                existance
+											   重新为已存账户发送内存缓存的缓存超时时间
 recheck_container_existence   60               Cache timeout in seconds to
                                                send memcached for container
                                                existance
+											   重新为已存容器发送内存缓存的缓存超时时间
 object_chunk_size             65536            Chunk size to read from
                                                object servers
+											   从对象服务器读取数据的块大小
 client_chunk_size             65536            Chunk size to read from
                                                clients
+											   从clients端读取数据的块大小
 memcache_servers              127.0.0.1:11211  Comma separated list of
                                                memcached servers ip:port
+											   memcache_servers的ip和port
 node_timeout                  10               Request timeout to external
                                                services
+											   外部服务请求超时时间
 client_timeout                60               Timeout to read one chunk
                                                from a client
+											   从一个client读取一个数据块的超时时间
 conn_timeout                  0.5              Connection timeout to
                                                external services
+											   外部服务连接超时时间
 error_suppression_interval    60               Time in seconds that must
                                                elapse since the last error
                                                for a node to be considered
                                                no longer error limited
+											   从最后一次报出error起，间隔多久会被认为已经正常
 error_suppression_limit       10               Error count to consider a
                                                node error limited
+											   建一个node判定为出错的的error个数
 rate_limit                    20000.0          Max container level ops per
                                                second
+											   每秒最大级别的容器操作
 account_rate_limit            200.0            Max account level ops per
                                                second
+											   每秒最大级别的账户操作
 rate_limit_account_whitelist                   Comma separated list of 
                                                account name hashes to not
                                                rate limit
+											   
 rate_limit_account_blacklist                   Comma separated list of
                                                account name hashes to block
                                                completly
@@ -484,14 +609,18 @@ Option        Default                              Description
 ------------  -----------------------------------  ------------------------
 class         swift.common.auth.DevAuthMiddleware  Auth wsgi middleware
                                                    to use
+												   使用的Auth wsgi中间件
 ip            127.0.0.1                            IP address of auth
                                                    server
+												   认证服务器的IP
 port          11000                                Port of auth server
+			  									   认证服务器的端口
 node_timeout  10                                   Request timeout
+			  									   请求超时时间
 ============  ===================================  ========================
 
 ------------------------
-Memcached Considerations Memcached隐私
+Memcached Considerations Memcached因素
 ------------------------
 
 Several of the Services rely on Memcached for caching certain types of
@@ -535,14 +664,14 @@ sharing a server, then some experimentaiton may be needed to find the best
 balance.
 
 大多数的服务都支持一个或者多个并发的处理器。这使服务可以更大化地利用多核的性能。一个好的起点是将
-Proxy和存储服务器的并发水平设置位内核数量的两倍。如果有１个以上的服务在共享一个服务器，那需要做
+Proxy和存储服务器的并发水平设置为内核数量的两倍。如果有１个以上的服务在共享一个服务器，那需要做
 些具体的实验以找出最平衡的方式。
 
 At Rackspace, our Proxy servers have dual quad core processors, giving us 8
 cores. Our testing has shown 16 workers to be a pretty good balance when
 saturating a 10g network and gives good CPU utilization.
 
-在Rackspace,我们的Proxy服务器都有两个４核的处理器，这位我们提供了８个核。
+在Rackspace,我们的Proxy服务器都有两个４核的处理器，这为我们提供了８个核。
 我们的测试显示１６个实例会最大化地利用10g网络带宽和CPU能力。
 
 Our Storage servers all run together on the same servers. These servers have
@@ -630,7 +759,7 @@ The following settings should be in `/etc/sysctl.conf`::
 
 To load the updated sysctl settings, run ``sudo sysctl -p``
 
-药重新载入更新的sysctl设置，请运行"sudo sysctl -p"
+要重新载入更新的sysctl设置，请运行"sudo sysctl -p"
 
 A note about changing the TIME_WAIT values.  By default the OS will hold
 a port open for 60 seconds to ensure that any remaining packets can be
